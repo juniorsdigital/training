@@ -448,11 +448,6 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .kcal-goal-sep{font-size:10px;color:var(--faint);margin:0 1px}
 .macro-goal-input{width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:4px 6px;text-align:right;outline:none;font-variant-numeric:tabular-nums}
 .macro-goal-input:focus{border-color:var(--accent)}
-.kcal-loadtype-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);flex-wrap:wrap}
-.kcal-load-select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);font-family:inherit;font-size:11px;padding:3px 6px;outline:none;cursor:pointer}
-.kcal-load-select:focus{border-color:var(--accent)}
-.kcal-load-btn{border:1px solid var(--border);border-radius:16px;background:var(--surface2);color:var(--muted);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;transition:all 0.15s}
-.kcal-load-btn:hover{color:var(--accent);border-color:rgba(249,115,22,0.4)}
 .kcal-macro-section{border-bottom:1px solid var(--border);padding:4px 0}
 .kcal-macro-row{display:flex;align-items:center;gap:10px;padding:5px 14px}
 .kcal-macro-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;width:46px;flex-shrink:0}
@@ -816,19 +811,6 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
               <span class="kcal-goal-sep">F:</span><input type="number" class="macro-goal-input" id="fatGoalInput" min="0" max="9999" placeholder="g">
             </div>
           </div>
-          <div class="kcal-loadtype-row">
-            <span>Load from day type:</span>
-            <select class="kcal-load-select" id="kcalDayTypeSelect">
-                <option value="">— select —</option>
-                <option value="rest">Rest Day</option>
-                <option value="z2only">Z2 Only</option>
-                <option value="z2lift">Z2 + Lift</option>
-                <option value="vo2">VO2 / Sprint</option>
-                <option value="longride">Long Ride (4+ hrs)</option>
-                <option value="test">Testing Day</option>
-              </select>
-              <button class="kcal-load-btn" id="kcalLoadDayTypeBtn">Apply</button>
-            </div>
         </div>
         <div class="kcal-summary" id="kcalSummary">
           <span class="kcal-nums"><span class="eaten" id="kcalEaten">0</span> / <span id="kcalGoalDisp">—</span> kcal</span>
@@ -2299,10 +2281,7 @@ async function loadNutritionTracker(date) {
   document.getElementById('kcalDateInput').value = date;
   document.getElementById('kcalErr').style.display = 'none';
 
-  // Detect training day type for this date and sync the dropdown
   const autoGoals = getAutoGoalsForDate(date);
-  const dayTypeSelect = document.getElementById('kcalDayTypeSelect');
-  if (dayTypeSelect) dayTypeSelect.value = autoGoals.nutType || '';
 
   try {
     await kcalFetch(date);
@@ -2398,16 +2377,6 @@ function initCalorieTracker() {
   const dateInput = document.getElementById('kcalDateInput');
   dateInput.value = kcalCurrentDate;
   dateInput.addEventListener('change', () => loadNutritionTracker(dateInput.value));
-
-  document.getElementById('kcalLoadDayTypeBtn').addEventListener('click', () => {
-    const type = document.getElementById('kcalDayTypeSelect').value;
-    if (!type || !NUT_GOALS[type]) return;
-    const g = NUT_GOALS[type];
-    document.getElementById('kcalGoalInput').value = g.kcal;
-    document.getElementById('carbsGoalInput').value = g.carbs;
-    document.getElementById('proteinGoalInput').value = g.protein;
-    document.getElementById('fatGoalInput').value = g.fat;
-  });
 
   document.getElementById('kcalSaveGoalBtn').addEventListener('click', async () => {
     const val = parseInt(document.getElementById('kcalGoalInput').value, 10);
@@ -2614,55 +2583,5 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- #region agent log -->
-<script>
-(function debugNutritionOverflow() {
-  function checkOverflows() {
-    var checks = [
-      { id: 'kcal-goal-wrap', sel: '.kcal-goal-wrap', hyp: 'H-A' },
-      { id: 'kcal-section-hdr', sel: '.kcal-section-hdr', hyp: 'H-C' },
-      { id: 'kcal-log-table', sel: '.kcal-log-table', hyp: 'H-B' },
-      { id: 'kcal-add-row', sel: '.kcal-add-row', hyp: 'H-D' },
-      { id: 'kcal-section', sel: '.kcal-section', hyp: 'H-B' },
-    ];
-    var vw = window.innerWidth;
-    var results = checks.map(function(c) {
-      var el = document.querySelector(c.sel);
-      if (!el) return { selector: c.sel, found: false, hyp: c.hyp };
-      var rect = el.getBoundingClientRect();
-      var scrollW = el.scrollWidth;
-      var clientW = el.clientWidth;
-      var overflows = scrollW > clientW || rect.right > vw + 2;
-      return { selector: c.sel, hyp: c.hyp, viewportWidth: vw, scrollWidth: scrollW, clientWidth: clientW, rectRight: Math.round(rect.right), overflows: overflows };
-    });
-    fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '7c3570' },
-      body: JSON.stringify({ sessionId: '7c3570', location: 'index.html:debugNutritionOverflow', message: 'overflow check', data: { viewportWidth: vw, results: results }, timestamp: Date.now(), runId: 'post-fix-3' })
-    }).catch(function() {});
-  }
-  function tryCheck() {
-    var panel = document.querySelector('#panel-nutrition');
-    if (panel && (panel.style.display === 'block' || getComputedStyle(panel).display === 'block')) {
-      checkOverflows();
-    }
-  }
-  document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(tryCheck, 500);
-    window.addEventListener('resize', tryCheck);
-    var origNav = window.navigateToPanel;
-    if (typeof origNav === 'function') {
-      window.navigateToPanel = function(p) {
-        origNav.apply(this, arguments);
-        if (p === 'nutrition') setTimeout(checkOverflows, 400);
-      };
-    }
-    document.querySelectorAll('[data-panel="nutrition"]').forEach(function(el) {
-      el.addEventListener('click', function() { setTimeout(checkOverflows, 600); });
-    });
-  });
-})();
-</script>
-<!-- #endregion -->
 </body>
 </html>
