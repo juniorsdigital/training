@@ -1,6 +1,7 @@
 'use strict';
 
 const { assertAllowedEmail, verifySupabaseUser } = require('./lib/supabaseAuth.js');
+const { agentDebugLog } = require('./lib/agentDebugLog.js');
 
 const INTERVALS_BASE = 'https://intervals.icu/api/v1';
 
@@ -110,6 +111,19 @@ function asArray(data) {
 }
 
 module.exports = async function handler(req, res) {
+  // #region agent log
+  agentDebugLog({
+    hypothesisId: 'H2',
+    location: 'api/dashboard-overview.js:entry',
+    message: 'dashboard-overview invoked',
+    data: {
+      method: req.method,
+      url: String(req.url || ''),
+      localDate: (req.query && req.query.localDate) || null
+    }
+  });
+  // #endregion
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -150,6 +164,18 @@ module.exports = async function handler(req, res) {
       athlete = athleteRes.data;
     } else {
       fetchErrors.athlete = athleteRes.body || String(athleteRes.status);
+      // #region agent log
+      agentDebugLog({
+        hypothesisId: 'H3',
+        location: 'api/dashboard-overview.js:athleteFetch',
+        message: 'intervals athlete request not ok',
+        data: {
+          status: athleteRes.status,
+          bodyPreview: String(athleteRes.body || '').slice(0, 240),
+          athleteId: String(athleteId)
+        }
+      });
+      // #endregion
     }
 
     const wellnessRes = await intervalsFetchJson(

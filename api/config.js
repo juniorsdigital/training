@@ -1,4 +1,15 @@
+const { agentDebugLog } = require('./lib/agentDebugLog.js');
+
 module.exports = async function handler(req, res) {
+  // #region agent log
+  agentDebugLog({
+    hypothesisId: 'H2',
+    location: 'api/config.js:entry',
+    message: 'config handler invoked',
+    data: { method: req.method, url: String(req.url || ''), vercelEnv: process.env.VERCEL_ENV || null }
+  });
+  // #endregion
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
