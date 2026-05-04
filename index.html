@@ -235,8 +235,6 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .auth-card-top{display:flex;justify-content:flex-start;margin-bottom:10px}
 .auth-back-btn{border:0;background:transparent;color:var(--muted);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:4px 0}
 .auth-back-btn:hover{color:var(--accent)}
-.login-nav-btn{border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--accent);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;padding:5px 12px;margin-right:8px;flex-shrink:0}
-.login-nav-btn:hover{background:var(--accent-dim)}
 .auth-title{font-size:20px;font-weight:800;letter-spacing:-0.2px;margin-bottom:7px}
 .auth-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
 .auth-row{display:flex;flex-direction:column;gap:5px;margin-bottom:9px}
@@ -274,13 +272,33 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .home-stat-v{font-weight:700;font-variant-numeric:tabular-nums}
 .home-list{margin:0;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.55}
 .home-err{font-size:11px;color:var(--z5);margin-top:8px}
+/* Public minimal (anonymous) */
+.public-shell{padding:clamp(20px,5vw,40px) clamp(16px,5vw,28px) 56px;max-width:22rem;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.public-shell.is-hidden{display:none!important}
+.public-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:clamp(28px,8vh,56px)}
+.public-date{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint);font-weight:600;line-height:1.4}
+.public-top-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.public-login{border:0;background:none;color:var(--faint);font:inherit;font-size:10px;font-weight:500;letter-spacing:0.06em;cursor:pointer;padding:2px 0;text-transform:lowercase}
+.public-login:hover{color:var(--accent)}
+.public-theme{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--faint);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:2px}
+.public-theme:hover{color:var(--text)}
+.public-main{flex:1;display:flex;flex-direction:column;gap:clamp(1.75rem,5vh,2.5rem)}
+.public-sec{}
+.public-label{font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--faint);margin:0 0 0.5rem}
+.public-block{font-size:14px;line-height:1.6;color:var(--text);font-weight:450}
+.public-block .pb-line{display:block;margin-top:0.35em;color:var(--muted);font-size:12px;font-weight:400;line-height:1.5}
+.public-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 12px;padding-top:4px;border-top:1px solid var(--border)}
+.public-metrics div{display:flex;flex-direction:column;gap:4px}
+.public-metrics dt{font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint)}
+.public-metrics dd{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);line-height:1.2}
+.public-err{font-size:11px;color:var(--z5);margin-top:12px;line-height:1.4}
 </style>
 </head>
 <body>
 <div class="auth-overlay is-hidden" id="authOverlay">
   <div class="auth-card">
     <div class="auth-card-top">
-      <button type="button" class="auth-back-btn" id="authCancelBtn">← Back to dashboard</button>
+      <button type="button" class="auth-back-btn" id="authCancelBtn">← back</button>
     </div>
     <div class="auth-title">Secure Dashboard Login</div>
     <div class="auth-sub">Sign in with your Supabase account to access this dashboard and sync Intervals.icu data.</div>
@@ -299,7 +317,38 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
   </div>
 </div>
 
-<div id="appShell" class="app-shell">
+<div id="publicShell" class="public-shell">
+  <header class="public-top">
+    <span class="public-date" id="publicDateStr">—</span>
+    <div class="public-top-actions">
+      <button type="button" class="public-login" id="publicLoginBtn">login</button>
+      <button type="button" class="public-theme" id="publicThemeBtn" aria-label="Toggle theme">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+  <main class="public-main">
+    <section class="public-sec">
+      <h2 class="public-label">Workout</h2>
+      <div id="publicPlan" class="public-block"></div>
+    </section>
+    <section class="public-sec">
+      <h2 class="public-label">Completed</h2>
+      <div id="publicDone" class="public-block"></div>
+    </section>
+    <section class="public-sec">
+      <h2 class="public-label">Metrics</h2>
+      <dl class="public-metrics" id="publicMetrics">
+        <div><dt>FTP</dt><dd id="publicFtp">—</dd></div>
+        <div><dt>VO2max</dt><dd id="publicVo2">—</dd></div>
+        <div><dt>Weight</dt><dd id="publicWeight">—</dd></div>
+      </dl>
+    </section>
+    <p class="public-err" id="publicErr" style="display:none" role="alert"></p>
+  </main>
+</div>
+
+<div id="appShell" class="app-shell is-hidden">
 <!-- HEADER -->
 <header class="header">
   <div class="logo">
@@ -327,7 +376,6 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
   </div>
   <button class="signout-btn" id="signOutBtn" type="button" style="display:none">Sign out</button>
   <div class="phase-wrap">
-    <button class="login-nav-btn" id="loginNavBtn" type="button">Login</button>
     <span class="badge" id="hdrPhase" style="background:var(--tst-bg);color:var(--tst)">Phase 0 – Testing</span>
     <div class="prog-wrap">
       <span class="prog-lbl" id="progLbl">Wk 1/35</span>
@@ -647,12 +695,23 @@ function isSessionAllowed(session) {
 }
 
 function updateAuthenticatedChrome(isLoggedIn) {
-  const loginBtn = document.getElementById('loginNavBtn');
   const signOutBtn = document.getElementById('signOutBtn');
   const syncBtn = document.getElementById('syncIntervalsBtn');
-  if (loginBtn) loginBtn.style.display = isLoggedIn ? 'none' : '';
   if (signOutBtn) signOutBtn.style.display = isLoggedIn ? '' : 'none';
   if (syncBtn) syncBtn.style.display = isLoggedIn ? '' : 'none';
+}
+
+function setViewMode(mode) {
+  const pub = document.getElementById('publicShell');
+  const app = document.getElementById('appShell');
+  if (!pub || !app) return;
+  if (mode === 'public') {
+    pub.classList.remove('is-hidden');
+    app.classList.add('is-hidden');
+  } else {
+    pub.classList.add('is-hidden');
+    app.classList.remove('is-hidden');
+  }
 }
 
 function getLocalISODate(d) {
@@ -860,12 +919,14 @@ async function loadDashboardOverview() {
       session = data.session;
     }
     const authed = isSessionAllowed(session);
-    const url = authed
-      ? `/api/dashboard-overview?localDate=${encodeURIComponent(localDate)}`
-      : `/api/dashboard-overview-public?localDate=${encodeURIComponent(localDate)}`;
-    const headers = authed && session?.access_token
-      ? { Authorization: `Bearer ${session.access_token}` }
-      : {};
+    if (!authed) {
+      setViewMode('public');
+      await loadPublicOverview();
+      setSyncStatus('');
+      return;
+    }
+    const url = `/api/dashboard-overview?localDate=${encodeURIComponent(localDate)}`;
+    const headers = { Authorization: `Bearer ${session.access_token}` };
     const response = await fetch(url, { headers });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'Overview request failed.');
@@ -873,7 +934,7 @@ async function loadDashboardOverview() {
     renderHomeOverview(payload);
     renderToday();
     renderZoneBars();
-    setSyncStatus(authed ? `Updated ${new Date().toLocaleTimeString()}` : `Live data · ${new Date().toLocaleTimeString()} · Sign in to sync to DB`);
+    setSyncStatus(`Updated ${new Date().toLocaleTimeString()}`);
   } catch (error) {
     setSyncStatus(error.message, true);
     document.getElementById('homeOverviewErr').style.display = '';
@@ -928,10 +989,15 @@ async function initAuthPortal() {
         updateAuthenticatedChrome(false);
         hideLoginOverlay();
         setAuthMessage('Signed out.');
-        loadDashboardOverview();
+        setViewMode('public');
+        loadPublicOverview();
       } else if (event === 'SIGNED_IN' && session && isSessionAllowed(session)) {
         hideLoginOverlay();
         updateAuthenticatedChrome(true);
+        setViewMode('full');
+        renderToday();
+        renderWeek();
+        renderZoneBars();
         loadDashboardOverview();
       }
     });
@@ -939,14 +1005,17 @@ async function initAuthPortal() {
     if (session?.user && !isSessionAllowed(session)) {
       await supabaseClient.auth.signOut();
       updateAuthenticatedChrome(false);
-    } else {
-      updateAuthenticatedChrome(isSessionAllowed(session));
+      return { loggedIn: false };
     }
+    const loggedIn = isSessionAllowed(session);
+    updateAuthenticatedChrome(loggedIn);
+    return { loggedIn };
   } catch (error) {
     setAuthMessage(error.message, true);
     supabaseClient = null;
     authReady = false;
     updateAuthenticatedChrome(false);
+    return { loggedIn: false };
   }
 }
 
@@ -978,7 +1047,7 @@ document.getElementById('authForm').addEventListener('submit', async (event) => 
   }
 });
 
-document.getElementById('loginNavBtn').addEventListener('click', () => {
+document.getElementById('publicLoginBtn').addEventListener('click', () => {
   if (authReady) setAuthMessage('Enter your credentials to continue.');
   showLoginOverlay();
 });
@@ -993,7 +1062,8 @@ document.getElementById('signOutBtn').addEventListener('click', async () => {
   if (supabaseClient) await supabaseClient.auth.signOut();
   updateAuthenticatedChrome(false);
   hideLoginOverlay();
-  await loadDashboardOverview();
+  setViewMode('public');
+  await loadPublicOverview();
 });
 
 // =================== DATA ===================
@@ -1424,6 +1494,94 @@ let currentWeekIdx = Math.max(0, Math.min(34, getWeekIdx(today)));
 let currentDayIdx = getDayIdx(today);
 let viewWeekIdx = currentWeekIdx;
 
+function renderPublicMinimal(apiData) {
+  const dateEl = document.getElementById('publicDateStr');
+  if (dateEl) dateEl.textContent = formatDateFull(today);
+
+  const wk = WEEKS[Math.max(0, Math.min(34, currentWeekIdx))];
+  const planDay = wk ? wk.days[currentDayIdx] : null;
+  const planEl = document.getElementById('publicPlan');
+  if (!planEl) return;
+
+  const planParts = [];
+  if (planDay) {
+    planParts.push(`<strong style="font-weight:600;color:var(--text)">${escapeHtml(planDay.lbl)}</strong>`);
+    if (planDay.am) {
+      const pmExtra = planDay.pm && planDay.pm !== '—' ? ` · ${escapeHtml(planDay.pm)}` : '';
+      planParts.push(`<span class="pb-line">${escapeHtml(planDay.am)}${pmExtra}</span>`);
+    } else if (planDay.pm && planDay.pm !== '—') {
+      planParts.push(`<span class="pb-line">${escapeHtml(planDay.pm)}</span>`);
+    }
+    if (planDay.det) {
+      planParts.push(`<span class="pb-line">${escapeHtml(planDay.det).replace(/\n/g, '<br>')}</span>`);
+    }
+  } else {
+    planParts.push('<span class="pb-line">No plan for this date.</span>');
+  }
+  (apiData.eventsToday || []).slice(0, 2).forEach((ev) => {
+    planParts.push(`<span class="pb-line">${escapeHtml(ev.name)}</span>`);
+  });
+  const evs = apiData.eventsToday || [];
+  if (evs.length > 2) planParts.push(`<span class="pb-line">+${evs.length - 2} calendar</span>`);
+  planEl.innerHTML = planParts.join('');
+
+  const primary = apiData.primaryActivity;
+  const doneEl = document.getElementById('publicDone');
+  if (!doneEl) return;
+  const isRest = planDay && planDay.t === 'rest';
+  const logged = meaningfulCompletedWorkout(primary);
+
+  if (isRest && !primary) {
+    doneEl.innerHTML = '<span class="pb-line">Rest · nothing logged</span>';
+  } else if (isRest && primary) {
+    doneEl.innerHTML = `<span class="pb-line">${escapeHtml(primary.name)} · ${formatDurationSec(primary.movingTimeSec)}</span>`;
+  } else if (logged && primary) {
+    const tail = [formatDurationSec(primary.movingTimeSec), formatDistanceM(primary.distanceM)];
+    if (primary.avgPower != null) tail.push(`${Math.round(primary.avgPower)} W avg`);
+    doneEl.innerHTML = `<strong style="font-weight:600">${escapeHtml(primary.name)}</strong><span class="pb-line">${tail.join(' · ')}</span>`;
+  } else if (primary) {
+    doneEl.innerHTML = `<span class="pb-line">${escapeHtml(primary.name)} · short / incomplete</span>`;
+  } else {
+    doneEl.innerHTML = '<span class="pb-line">Nothing logged yet</span>';
+  }
+
+  const v = apiData.vitals || {};
+  const ftpEl = document.getElementById('publicFtp');
+  const vo2El = document.getElementById('publicVo2');
+  const wtEl = document.getElementById('publicWeight');
+  if (ftpEl) ftpEl.textContent = v.ftp ? `${Math.round(v.ftp)} W` : '—';
+  if (vo2El) vo2El.textContent = v.vo2max != null ? `${Math.round(v.vo2max * 10) / 10}` : '—';
+  if (wtEl) {
+    if (v.weightKg && v.weightKg > 0) {
+      wtEl.textContent = `${v.weightKg.toFixed(1)} kg`;
+      wtEl.title = `${(v.weightKg * 2.20462).toFixed(0)} lb`;
+    } else {
+      wtEl.textContent = '—';
+      wtEl.title = '';
+    }
+  }
+}
+
+async function loadPublicOverview() {
+  const errEl = document.getElementById('publicErr');
+  if (errEl) {
+    errEl.style.display = 'none';
+    errEl.textContent = '';
+  }
+  try {
+    const localDate = getLocalISODate(today);
+    const response = await fetch(`/api/dashboard-overview-public?localDate=${encodeURIComponent(localDate)}`);
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Could not load today’s data.');
+    renderPublicMinimal(payload);
+  } catch (error) {
+    if (errEl) {
+      errEl.style.display = 'block';
+      errEl.textContent = error.message;
+    }
+  }
+}
+
 // =================== RENDER ZONE BARS ===================
 function renderZoneBars() {
   const ftp = intervalsFtpOverride || 239;
@@ -1685,22 +1843,37 @@ document.querySelectorAll('.nt').forEach(tab => {
 
 // Theme toggle
 const themeBtn = document.getElementById('themeBtn');
+const publicThemeBtn = document.getElementById('publicThemeBtn');
+const moonSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const sunSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+const moonSvgSm = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const sunSvgSm = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
 let isDark = true;
-themeBtn.addEventListener('click', () => {
-  isDark = !isDark;
+function applyThemeToDocument() {
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-  themeBtn.innerHTML = isDark
-    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
-    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
-});
+  if (themeBtn) themeBtn.innerHTML = isDark ? moonSvg : sunSvg;
+  if (publicThemeBtn) publicThemeBtn.innerHTML = isDark ? moonSvgSm : sunSvgSm;
+}
+function toggleTheme() {
+  isDark = !isDark;
+  applyThemeToDocument();
+}
+if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+if (publicThemeBtn) publicThemeBtn.addEventListener('click', toggleTheme);
 
 // =================== INIT ===================
 async function initApp() {
-  renderToday();
-  renderWeek();
-  renderZoneBars();
-  await initAuthPortal();
-  await loadDashboardOverview();
+  const { loggedIn } = await initAuthPortal();
+  if (loggedIn) {
+    setViewMode('full');
+    renderToday();
+    renderWeek();
+    renderZoneBars();
+    await loadDashboardOverview();
+  } else {
+    setViewMode('public');
+    await loadPublicOverview();
+  }
 }
 initApp();
 </script>
