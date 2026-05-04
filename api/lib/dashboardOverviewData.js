@@ -180,6 +180,28 @@ async function buildDashboardOverviewPayload(localDate) {
     fetchErrors.wellness = wellnessRes.body || String(wellnessRes.status);
   }
 
+  // If today's wellness has no VO2Max, look back up to 90 days for the most recent Garmin value.
+  // #region agent log
+  const _needsVo2Lookback = !wellness?.vo2max;
+  // #endregion
+  if (_needsVo2Lookback) {
+    const oldest = new Date(localDate);
+    oldest.setDate(oldest.getDate() - 90);
+    const oldestStr = oldest.toISOString().slice(0, 10);
+    const rangeRes = await intervalsFetchJson(
+      intervalsApiKey,
+      `/athlete/${athleteId}/wellness?oldest=${oldestStr}&newest=${localDate}`
+    );
+    if (rangeRes.ok && Array.isArray(rangeRes.data)) {
+      const recent = rangeRes.data
+        .filter((w) => w && w.vo2max != null && Number(w.vo2max) > 0)
+        .sort((a, b) => (b.id || b.date || '').localeCompare(a.id || a.date || ''));
+      if (recent.length > 0) {
+        wellness = wellness ? { ...wellness, vo2max: recent[0].vo2max } : recent[0];
+      }
+    }
+  }
+
   const eventsRes = await intervalsFetchJson(
     intervalsApiKey,
     `/athlete/${athleteId}/events?oldest=${localDate}&newest=${localDate}`
@@ -217,13 +239,8 @@ async function buildDashboardOverviewPayload(localDate) {
 
   // #region agent log
   const _vo2debug = {
-    wellnessOk: wellnessRes.ok,
-    wellnessStatus: wellnessRes.status,
-    athleteOk: athleteRes.ok,
-    w_vo2keys: wellness ? Object.keys(wellness).filter(k => k.toLowerCase().includes('vo2')) : null,
-    w_vo2vals: wellness ? Object.fromEntries(Object.entries(wellness).filter(([k]) => k.toLowerCase().includes('vo2'))) : null,
-    a_vo2keys: athlete ? Object.keys(athlete).filter(k => k.toLowerCase().includes('vo2')) : null,
-    a_vo2vals: athlete ? Object.fromEntries(Object.entries(athlete).filter(([k]) => k.toLowerCase().includes('vo2'))) : null,
+    resolvedVo2max: vitals.vo2max,
+    usedLookback: _needsVo2Lookback,
   };
   // #endregion
 
