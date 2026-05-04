@@ -443,6 +443,24 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .kcal-del-btn:hover{color:var(--z5)}
 .kcal-empty{padding:20px 14px;text-align:center;font-size:12px;color:var(--muted);font-style:italic}
 .kcal-err{padding:8px 14px;font-size:11px;color:var(--z5)}
+.kcal-goal-sep{font-size:10px;color:var(--faint);margin:0 1px}
+.macro-goal-input{width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:4px 6px;text-align:right;outline:none;font-variant-numeric:tabular-nums}
+.macro-goal-input:focus{border-color:var(--accent)}
+.kcal-loadtype-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.kcal-load-select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);font-family:inherit;font-size:11px;padding:3px 6px;outline:none;cursor:pointer}
+.kcal-load-select:focus{border-color:var(--accent)}
+.kcal-load-btn{border:1px solid var(--border);border-radius:16px;background:var(--surface2);color:var(--muted);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;transition:all 0.15s}
+.kcal-load-btn:hover{color:var(--accent);border-color:rgba(249,115,22,0.4)}
+.kcal-macro-section{border-bottom:1px solid var(--border);padding:4px 0}
+.kcal-macro-row{display:flex;align-items:center;gap:10px;padding:5px 14px}
+.kcal-macro-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;width:46px;flex-shrink:0}
+.kcal-macro-nums{font-size:11px;font-variant-numeric:tabular-nums;color:var(--text);width:96px;text-align:right;flex-shrink:0;white-space:nowrap}
+.kcal-macro-bar-wrap{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;min-width:40px}
+.kcal-macro-bar-fill{height:100%;border-radius:3px;transition:width 0.4s ease}
+.kcal-macro-bar-fill.over{background:var(--z5)!important}
+.kcal-macro-input{width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:6px 6px;text-align:right;outline:none;font-variant-numeric:tabular-nums}
+.kcal-macro-input:focus{border-color:var(--accent)}
+.td-macro{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:11px}
 /* OVERVIEW CALORIES CARD */
 .kcal-ov-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:18px}
 .kcal-ov-hdr{padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
@@ -775,12 +793,30 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
       <div class="kcal-section">
         <div class="kcal-section-hdr">
           <span class="kcal-section-title">Calorie Log</span>
-          <div class="kcal-date-row">
-            <input type="date" class="kcal-date-input" id="kcalDateInput">
-            <div class="kcal-goal-wrap">
-              <span>Goal:</span>
-              <input type="number" class="kcal-goal-input" id="kcalGoalInput" min="0" max="9999" placeholder="kcal">
-              <button class="kcal-save-btn" id="kcalSaveGoalBtn">Save</button>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <div class="kcal-date-row">
+              <input type="date" class="kcal-date-input" id="kcalDateInput">
+              <div class="kcal-goal-wrap">
+                <span>Goal:</span>
+                <input type="number" class="kcal-goal-input" id="kcalGoalInput" min="0" max="9999" placeholder="kcal">
+                <span class="kcal-goal-sep">C:</span><input type="number" class="macro-goal-input" id="carbsGoalInput" min="0" max="9999" placeholder="g">
+                <span class="kcal-goal-sep">P:</span><input type="number" class="macro-goal-input" id="proteinGoalInput" min="0" max="9999" placeholder="g">
+                <span class="kcal-goal-sep">F:</span><input type="number" class="macro-goal-input" id="fatGoalInput" min="0" max="9999" placeholder="g">
+                <button class="kcal-save-btn" id="kcalSaveGoalBtn">Save</button>
+              </div>
+            </div>
+            <div class="kcal-loadtype-row">
+              <span>Load from day type:</span>
+              <select class="kcal-load-select" id="kcalDayTypeSelect">
+                <option value="">— select —</option>
+                <option value="rest">Rest Day</option>
+                <option value="z2only">Z2 Only</option>
+                <option value="z2lift">Z2 + Lift</option>
+                <option value="vo2">VO2 / Sprint</option>
+                <option value="longride">Long Ride (4+ hrs)</option>
+                <option value="test">Testing Day</option>
+              </select>
+              <button class="kcal-load-btn" id="kcalLoadDayTypeBtn">Apply</button>
             </div>
           </div>
         </div>
@@ -789,14 +825,34 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
           <div class="kcal-bar-wrap"><div class="kcal-bar-fill" id="kcalBarFill" style="width:0%"></div></div>
           <span class="kcal-burnt" id="kcalBurntDisp" style="display:none">Burnt: <b id="kcalBurntVal">—</b> kcal</span>
         </div>
+        <div class="kcal-macro-section" id="kcalMacroSummary" style="display:none">
+          <div class="kcal-macro-row">
+            <span class="kcal-macro-lbl" style="color:var(--z2)">Carbs</span>
+            <span class="kcal-macro-nums" id="kcalCarbsNums">0g</span>
+            <div class="kcal-macro-bar-wrap"><div class="kcal-macro-bar-fill" id="kcalCarbsFill" style="width:0%;background:var(--z2)"></div></div>
+          </div>
+          <div class="kcal-macro-row">
+            <span class="kcal-macro-lbl" style="color:var(--z3)">Protein</span>
+            <span class="kcal-macro-nums" id="kcalProteinNums">0g</span>
+            <div class="kcal-macro-bar-wrap"><div class="kcal-macro-bar-fill" id="kcalProteinFill" style="width:0%;background:var(--z3)"></div></div>
+          </div>
+          <div class="kcal-macro-row">
+            <span class="kcal-macro-lbl" style="color:var(--muted)">Fat</span>
+            <span class="kcal-macro-nums" id="kcalFatNums">0g</span>
+            <div class="kcal-macro-bar-wrap"><div class="kcal-macro-bar-fill" id="kcalFatFill" style="width:0%;background:var(--muted)"></div></div>
+          </div>
+        </div>
         <div class="kcal-body">
           <div class="kcal-add-row">
             <input type="text" class="kcal-item-input" id="kcalItemInput" placeholder="Food item or meal…">
             <input type="number" class="kcal-cal-input" id="kcalCalInput" placeholder="kcal" min="0" max="9999">
+            <input type="number" class="kcal-macro-input" id="kcalCarbsInput" placeholder="C g" min="0" max="9999">
+            <input type="number" class="kcal-macro-input" id="kcalProteinInput" placeholder="P g" min="0" max="9999">
+            <input type="number" class="kcal-macro-input" id="kcalFatInput" placeholder="F g" min="0" max="9999">
             <button class="kcal-add-btn" id="kcalAddBtn">+ Add</button>
           </div>
           <table class="kcal-log-table" id="kcalTable" style="display:none">
-            <thead><tr><th>Item</th><th>kcal</th><th></th></tr></thead>
+            <thead><tr><th>Item</th><th>kcal</th><th style="text-align:right;color:var(--z2)">C</th><th style="text-align:right;color:var(--z3)">P</th><th style="text-align:right;color:var(--muted)">F</th><th></th></tr></thead>
             <tbody id="kcalTableBody"></tbody>
           </table>
           <div class="kcal-empty" id="kcalEmpty">No entries yet — add meals and snacks above.</div>
@@ -1681,6 +1737,16 @@ const NUT_DATA = {
   }
 };
 
+// Numeric midpoint goals derived from NUT_DATA ranges (used to pre-fill goals)
+const NUT_GOALS = {
+  rest:     { kcal: 2350, carbs: 316, protein: 134, fat: 100 },
+  z2only:   { kcal: 2650, carbs: 387, protein: 113, fat:  90 },
+  z2lift:   { kcal: 2850, carbs: 457, protein: 127, fat:  90 },
+  vo2:      { kcal: 3050, carbs: 527, protein: 127, fat:  70 },
+  longride: { kcal: 3500, carbs: 632, protein: 113, fat:  80 },
+  test:     { kcal: 2900, carbs: 562, protein: 113, fat:  70 },
+};
+
 // =================== HELPERS ===================
 function getDateForDay(weekIdx, dayIdx) {
   const d = new Date(PLAN_START);
@@ -2041,13 +2107,13 @@ async function kcalFetch(date) {
   kcalGoal = data.goal;
 }
 
-async function kcalPostEntry(date, item, calories) {
+async function kcalPostEntry(date, item, calories, carbs, protein, fat) {
   const session = await kcalGetSession();
   if (!session) throw new Error('Not signed in.');
   const resp = await fetch('/api/nutrition', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-    body: JSON.stringify({ date, item, calories })
+    body: JSON.stringify({ date, item, calories, carbs: carbs || 0, protein: protein || 0, fat: fat || 0 })
   });
   if (!resp.ok) {
     const d = await resp.json().catch(() => ({}));
@@ -2066,13 +2132,17 @@ async function kcalDeleteEntry(id) {
   if (!resp.ok) throw new Error('Failed to delete entry.');
 }
 
-async function kcalSaveGoal(date, goalCals) {
+async function kcalSaveGoal(date, goalCals, carbsGoal, proteinGoal, fatGoal) {
   const session = await kcalGetSession();
   if (!session) throw new Error('Not signed in.');
+  const body = { date, goal_calories: goalCals };
+  if (carbsGoal != null) body.carbs_goal = carbsGoal;
+  if (proteinGoal != null) body.protein_goal = proteinGoal;
+  if (fatGoal != null) body.fat_goal = fatGoal;
   const resp = await fetch('/api/nutrition', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-    body: JSON.stringify({ date, goal_calories: goalCals })
+    body: JSON.stringify(body)
   });
   if (!resp.ok) {
     const d = await resp.json().catch(() => ({}));
@@ -2083,9 +2153,15 @@ async function kcalSaveGoal(date, goalCals) {
 
 function kcalRenderTracker() {
   const total = kcalLogs.reduce((s, e) => s + (e.calories || 0), 0);
+  const totalCarbs = kcalLogs.reduce((s, e) => s + (e.carbs || 0), 0);
+  const totalProtein = kcalLogs.reduce((s, e) => s + (e.protein || 0), 0);
+  const totalFat = kcalLogs.reduce((s, e) => s + (e.fat || 0), 0);
   const goal = kcalGoal?.goal_calories ?? null;
+  const carbsGoal = kcalGoal?.carbs_goal ?? null;
+  const proteinGoal = kcalGoal?.protein_goal ?? null;
+  const fatGoal = kcalGoal?.fat_goal ?? null;
 
-  // Summary bar
+  // Calorie summary bar
   document.getElementById('kcalEaten').textContent = total;
   const goalDisp = document.getElementById('kcalGoalDisp');
   const bar = document.getElementById('kcalBarFill');
@@ -2109,6 +2185,23 @@ function kcalRenderTracker() {
     burntWrap.style.display = 'none';
   }
 
+  // Macro summary bars
+  const macroSection = document.getElementById('kcalMacroSummary');
+  const hasMacros = carbsGoal || proteinGoal || fatGoal || totalCarbs > 0 || totalProtein > 0 || totalFat > 0;
+  macroSection.style.display = hasMacros ? '' : 'none';
+
+  function updateMacroBar(numsId, fillId, val, g) {
+    const numsEl = document.getElementById(numsId);
+    const fillEl = document.getElementById(fillId);
+    numsEl.textContent = g ? `${val}g / ${g}g` : `${val}g`;
+    const pct = g ? Math.min(100, Math.round((val / g) * 100)) : 0;
+    fillEl.style.width = pct + '%';
+    fillEl.classList.toggle('over', g > 0 && val > g);
+  }
+  updateMacroBar('kcalCarbsNums', 'kcalCarbsFill', totalCarbs, carbsGoal);
+  updateMacroBar('kcalProteinNums', 'kcalProteinFill', totalProtein, proteinGoal);
+  updateMacroBar('kcalFatNums', 'kcalFatFill', totalFat, fatGoal);
+
   // Table
   const tbody = document.getElementById('kcalTableBody');
   const table = document.getElementById('kcalTable');
@@ -2124,12 +2217,18 @@ function kcalRenderTracker() {
       <tr>
         <td>${escapeHtml(e.item)}</td>
         <td class="td-cal">${e.calories}</td>
+        <td class="td-macro">${e.carbs || 0}</td>
+        <td class="td-macro">${e.protein || 0}</td>
+        <td class="td-macro">${e.fat || 0}</td>
         <td class="td-del"><button class="kcal-del-btn" data-id="${escapeHtml(e.id)}" title="Remove">×</button></td>
       </tr>`).join('');
   }
 
-  // Goal input
+  // Goal inputs
   if (goal) document.getElementById('kcalGoalInput').value = goal;
+  if (carbsGoal) document.getElementById('carbsGoalInput').value = carbsGoal;
+  if (proteinGoal) document.getElementById('proteinGoalInput').value = proteinGoal;
+  if (fatGoal) document.getElementById('fatGoalInput').value = fatGoal;
 
   // Update overview card too if we're looking at today
   if (kcalCurrentDate === getLocalISODate(today)) {
@@ -2197,13 +2296,31 @@ function initCalorieTracker() {
   dateInput.value = kcalCurrentDate;
   dateInput.addEventListener('change', () => loadNutritionTracker(dateInput.value));
 
+  document.getElementById('kcalLoadDayTypeBtn').addEventListener('click', () => {
+    const type = document.getElementById('kcalDayTypeSelect').value;
+    if (!type || !NUT_GOALS[type]) return;
+    const g = NUT_GOALS[type];
+    document.getElementById('kcalGoalInput').value = g.kcal;
+    document.getElementById('carbsGoalInput').value = g.carbs;
+    document.getElementById('proteinGoalInput').value = g.protein;
+    document.getElementById('fatGoalInput').value = g.fat;
+  });
+
   document.getElementById('kcalSaveGoalBtn').addEventListener('click', async () => {
     const val = parseInt(document.getElementById('kcalGoalInput').value, 10);
     if (!val || val <= 0) return;
+    const carbsGoal = parseInt(document.getElementById('carbsGoalInput').value, 10);
+    const proteinGoal = parseInt(document.getElementById('proteinGoalInput').value, 10);
+    const fatGoal = parseInt(document.getElementById('fatGoalInput').value, 10);
     const btn = document.getElementById('kcalSaveGoalBtn');
     btn.disabled = true;
     try {
-      const r = await kcalSaveGoal(kcalCurrentDate, val);
+      const r = await kcalSaveGoal(
+        kcalCurrentDate, val,
+        Number.isFinite(carbsGoal) && carbsGoal >= 0 ? carbsGoal : null,
+        Number.isFinite(proteinGoal) && proteinGoal >= 0 ? proteinGoal : null,
+        Number.isFinite(fatGoal) && fatGoal >= 0 ? fatGoal : null
+      );
       kcalGoal = r.goal;
       kcalRenderTracker();
     } catch (e) {
@@ -2219,13 +2336,19 @@ function initCalorieTracker() {
     const item = document.getElementById('kcalItemInput').value.trim();
     const calories = parseInt(document.getElementById('kcalCalInput').value, 10);
     if (!item || !calories || calories < 0) return;
+    const carbs = parseInt(document.getElementById('kcalCarbsInput').value, 10) || 0;
+    const protein = parseInt(document.getElementById('kcalProteinInput').value, 10) || 0;
+    const fat = parseInt(document.getElementById('kcalFatInput').value, 10) || 0;
     const btn = document.getElementById('kcalAddBtn');
     btn.disabled = true;
     try {
-      const r = await kcalPostEntry(kcalCurrentDate, item, calories);
+      const r = await kcalPostEntry(kcalCurrentDate, item, calories, carbs, protein, fat);
       kcalLogs.push(r.log);
       document.getElementById('kcalItemInput').value = '';
       document.getElementById('kcalCalInput').value = '';
+      document.getElementById('kcalCarbsInput').value = '';
+      document.getElementById('kcalProteinInput').value = '';
+      document.getElementById('kcalFatInput').value = '';
       kcalRenderTracker();
     } catch (e) {
       const errEl = document.getElementById('kcalErr');

@@ -97,10 +97,18 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'goal_calories must be a positive integer.' });
       }
 
+      const goalPayload = { log_date: date, goal_calories: goalCals, updated_at: new Date().toISOString() };
+      const carbsGoal = parseInt(body.carbs_goal, 10);
+      const proteinGoal = parseInt(body.protein_goal, 10);
+      const fatGoal = parseInt(body.fat_goal, 10);
+      if (Number.isFinite(carbsGoal) && carbsGoal >= 0) goalPayload.carbs_goal = carbsGoal;
+      if (Number.isFinite(proteinGoal) && proteinGoal >= 0) goalPayload.protein_goal = proteinGoal;
+      if (Number.isFinite(fatGoal) && fatGoal >= 0) goalPayload.fat_goal = fatGoal;
+
       const resp = await fetch(restUrl('/nutrition_goals'), {
         method: 'POST',
         headers: { ...supabaseHeaders(), 'Prefer': 'resolution=merge-duplicates,return=representation' },
-        body: JSON.stringify({ log_date: date, goal_calories: goalCals, updated_at: new Date().toISOString() })
+        body: JSON.stringify(goalPayload)
       });
       if (!resp.ok) {
         const txt = await resp.text();
@@ -121,11 +129,21 @@ module.exports = async function handler(req, res) {
     if (!Number.isFinite(calories) || calories < 0) {
       return res.status(400).json({ error: 'calories must be a non-negative integer.' });
     }
+    const carbs = parseInt(body.carbs, 10);
+    const protein = parseInt(body.protein, 10);
+    const fat = parseInt(body.fat, 10);
 
     const resp = await fetch(restUrl('/nutrition_logs'), {
       method: 'POST',
       headers: supabaseHeaders(),
-      body: JSON.stringify({ log_date: date, item, calories })
+      body: JSON.stringify({
+        log_date: date,
+        item,
+        calories,
+        carbs: Number.isFinite(carbs) && carbs >= 0 ? carbs : 0,
+        protein: Number.isFinite(protein) && protein >= 0 ? protein : 0,
+        fat: Number.isFinite(fat) && fat >= 0 ? fat : 0
+      })
     });
     if (!resp.ok) {
       const txt = await resp.text();
