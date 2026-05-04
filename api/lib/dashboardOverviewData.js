@@ -180,11 +180,7 @@ async function buildDashboardOverviewPayload(localDate) {
     fetchErrors.wellness = wellnessRes.body || String(wellnessRes.status);
   }
 
-  // If today's wellness has no VO2Max, look back up to 90 days for the most recent Garmin value.
-  // #region agent log
-  const _needsVo2Lookback = !wellness?.vo2max;
-  // #endregion
-  if (_needsVo2Lookback) {
+  if (!wellness?.vo2max) {
     const oldest = new Date(localDate);
     oldest.setDate(oldest.getDate() - 90);
     const oldestStr = oldest.toISOString().slice(0, 10);
@@ -237,17 +233,9 @@ async function buildDashboardOverviewPayload(localDate) {
     .filter((a) => activityLocalDay(a) === localDate)
     .map(summarizeActivity);
 
-  // #region agent log
-  const _vo2debug = {
-    resolvedVo2max: vitals.vo2max,
-    usedLookback: _needsVo2Lookback,
-  };
-  // #endregion
-
   return {
     localDate,
     vitals,
-    _vo2debug,
     eventsToday: events.map((ev) => ({
       id: ev.id,
       name: ev.name || ev.title || 'Event',
