@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/peak-cycling-dashboard.html",
+      "destination": "/",
+      "permanent": true
+    }
+  ]
+}
