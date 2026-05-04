@@ -105,6 +105,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
   /* Compact header on mobile */
   .hd,.prog-wrap,.stat-pill,.sync-status{display:none}
   .phase-wrap{gap:6px}
+  .phase-wrap .badge{display:none}
   /* Improve touch targets for header buttons */
   .hamburger{width:40px;height:40px}
   .theme-btn{width:36px;height:36px}
@@ -404,12 +405,13 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .public-err{font-size:13px;color:var(--z5);margin-top:12px;line-height:1.5}
 /* CALORIE TRACKER */
 .kcal-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:18px}
-.kcal-section-hdr{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.kcal-section-hdr{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.kcal-hdr-title-row{display:flex;align-items:center;justify-content:space-between}
 .kcal-section-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px}
 .kcal-date-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .kcal-date-input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:4px 8px;outline:none;cursor:pointer}
 .kcal-date-input:focus{border-color:var(--accent)}
-.kcal-goal-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
+.kcal-goal-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);flex-wrap:wrap}
 .kcal-goal-input{width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:4px 6px;text-align:right;outline:none}
 .kcal-goal-input:focus{border-color:var(--accent)}
 .kcal-save-btn{border:1px solid var(--border);border-radius:16px;background:var(--surface2);color:var(--muted);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;transition:all 0.15s}
@@ -800,22 +802,23 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
       <!-- CALORIE TRACKER -->
       <div class="kcal-section">
         <div class="kcal-section-hdr">
-          <span class="kcal-section-title">Calorie Log</span>
-          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-            <div class="kcal-date-row">
-              <input type="date" class="kcal-date-input" id="kcalDateInput">
-              <div class="kcal-goal-wrap">
-                <span>Goal:</span>
-                <input type="number" class="kcal-goal-input" id="kcalGoalInput" min="0" max="9999" placeholder="kcal">
-                <span class="kcal-goal-sep">C:</span><input type="number" class="macro-goal-input" id="carbsGoalInput" min="0" max="9999" placeholder="g">
-                <span class="kcal-goal-sep">P:</span><input type="number" class="macro-goal-input" id="proteinGoalInput" min="0" max="9999" placeholder="g">
-                <span class="kcal-goal-sep">F:</span><input type="number" class="macro-goal-input" id="fatGoalInput" min="0" max="9999" placeholder="g">
-                <button class="kcal-save-btn" id="kcalSaveGoalBtn">Save</button>
-              </div>
+          <div class="kcal-hdr-title-row">
+            <span class="kcal-section-title">Calorie Log</span>
+            <button class="kcal-save-btn" id="kcalSaveGoalBtn">Save</button>
+          </div>
+          <div class="kcal-date-row">
+            <input type="date" class="kcal-date-input" id="kcalDateInput">
+            <div class="kcal-goal-wrap">
+              <span>Goal:</span>
+              <input type="number" class="kcal-goal-input" id="kcalGoalInput" min="0" max="9999" placeholder="kcal">
+              <span class="kcal-goal-sep">C:</span><input type="number" class="macro-goal-input" id="carbsGoalInput" min="0" max="9999" placeholder="g">
+              <span class="kcal-goal-sep">P:</span><input type="number" class="macro-goal-input" id="proteinGoalInput" min="0" max="9999" placeholder="g">
+              <span class="kcal-goal-sep">F:</span><input type="number" class="macro-goal-input" id="fatGoalInput" min="0" max="9999" placeholder="g">
             </div>
-            <div class="kcal-loadtype-row">
-              <span>Load from day type:</span>
-              <select class="kcal-load-select" id="kcalDayTypeSelect">
+          </div>
+          <div class="kcal-loadtype-row">
+            <span>Load from day type:</span>
+            <select class="kcal-load-select" id="kcalDayTypeSelect">
                 <option value="">— select —</option>
                 <option value="rest">Rest Day</option>
                 <option value="z2only">Z2 Only</option>
@@ -826,7 +829,6 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
               </select>
               <button class="kcal-load-btn" id="kcalLoadDayTypeBtn">Apply</button>
             </div>
-          </div>
         </div>
         <div class="kcal-summary" id="kcalSummary">
           <span class="kcal-nums"><span class="eaten" id="kcalEaten">0</span> / <span id="kcalGoalDisp">—</span> kcal</span>
@@ -2636,7 +2638,7 @@ if ('serviceWorker' in navigator) {
     fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '7c3570' },
-      body: JSON.stringify({ sessionId: '7c3570', location: 'index.html:debugNutritionOverflow', message: 'overflow check', data: { viewportWidth: vw, results: results }, timestamp: Date.now(), runId: 'post-fix' })
+      body: JSON.stringify({ sessionId: '7c3570', location: 'index.html:debugNutritionOverflow', message: 'overflow check', data: { viewportWidth: vw, results: results }, timestamp: Date.now(), runId: 'post-fix-2' })
     }).catch(function() {});
   }
   function tryCheck() {
