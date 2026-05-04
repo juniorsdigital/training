@@ -14,25 +14,6 @@ async function fetchIntervalsActivities(intervalsApiKey) {
   oldestDate.setUTCDate(oldestDate.getUTCDate() - 365);
   const oldest = formatYyyyMmDdUtc(oldestDate);
   const activitiesUrl = `${INTERVALS_BASE_URL}/athlete/${athleteId}/activities?oldest=${oldest}&newest=${newest}&limit=500`;
-  // #region agent log
-  fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '79be01' },
-    body: JSON.stringify({
-      sessionId: '79be01',
-      runId: 'pre-fix',
-      hypothesisId: 'H1',
-      location: 'api/intervals.js:fetchIntervalsActivities',
-      message: 'activities request URL and query params',
-      data: {
-        activitiesUrl,
-        hasOldestParam: activitiesUrl.includes('oldest='),
-        hasNewestParam: activitiesUrl.includes('newest=')
-      },
-      timestamp: Date.now()
-    })
-  }).catch(() => {});
-  // #endregion
   const response = await fetch(activitiesUrl, {
     headers: {
       Authorization: intervalsAuthorizationValue(intervalsApiKey)
@@ -41,49 +22,10 @@ async function fetchIntervalsActivities(intervalsApiKey) {
 
   if (!response.ok) {
     const text = await response.text();
-    // #region agent log
-    fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '79be01' },
-      body: JSON.stringify({
-        sessionId: '79be01',
-        runId: 'pre-fix',
-        hypothesisId: 'H1',
-        location: 'api/intervals.js:fetchIntervalsActivities:error',
-        message: 'intervals activities non-OK response',
-        data: {
-          status: response.status,
-          bodyPreview: (text || '').slice(0, 200)
-        },
-        timestamp: Date.now()
-      })
-    }).catch(() => {});
-    // #endregion
     throw new Error(`Intervals.icu API error: ${text || response.status}`);
   }
 
-  const data = await response.json();
-  // #region agent log
-  fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '79be01' },
-    body: JSON.stringify({
-      sessionId: '79be01',
-      runId: 'post-fix',
-      hypothesisId: 'H1',
-      location: 'api/intervals.js:fetchIntervalsActivities:success',
-      message: 'activities fetch OK after oldest/newest',
-      data: {
-        athleteId,
-        oldest,
-        newest,
-        activityCount: Array.isArray(data) ? data.length : null
-      },
-      timestamp: Date.now()
-    })
-  }).catch(() => {});
-  // #endregion
-  return data;
+  return response.json();
 }
 
 async function persistActivitiesToSupabase(activities) {
@@ -146,22 +88,6 @@ module.exports = async function handler(req, res) {
     if (!intervalsApiKey) {
       return res.status(500).json({ error: 'Missing Intervals API key.' });
     }
-
-    // #region agent log
-    fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '79be01' },
-      body: JSON.stringify({
-        sessionId: '79be01',
-        runId: 'pre-fix',
-        hypothesisId: 'H5',
-        location: 'api/intervals.js:handler',
-        message: 'POST /api/intervals sync invoked',
-        data: { hasIntervalsKey: Boolean(intervalsApiKey) },
-        timestamp: Date.now()
-      })
-    }).catch(() => {});
-    // #endregion
 
     const activities = await fetchIntervalsActivities(intervalsApiKey);
     const savedCount = await persistActivitiesToSupabase(Array.isArray(activities) ? activities : []);
