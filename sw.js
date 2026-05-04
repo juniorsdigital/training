@@ -1,4 +1,4 @@
-const CACHE = 'peak-cycling-v3';
+const CACHE = 'peak-cycling-v4';
 const PRECACHE = [
   '/',
   '/index.html',
