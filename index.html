@@ -73,6 +73,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .nav-item.active{background:var(--accent-dim);color:var(--accent)}
 .nav-sec{padding:14px 17px 5px;font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:0.8px}
 .sb-footer{padding:10px;border-top:1px solid var(--border)}
+.sb-actions{display:flex;align-items:center;gap:8px;padding:10px 10px 0;flex-wrap:wrap}
 .ftp-card{background:var(--accent-dim);border:1px solid rgba(249,115,22,0.3);border-radius:var(--radius);padding:12px;text-align:center}
 .ftp-val{font-size:26px;font-weight:800;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums}
 .ftp-lbl{font-size:10px;color:var(--muted);margin-top:2px}
@@ -293,7 +294,6 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .auth-btn{width:100%;border:0;border-radius:var(--radius-sm);padding:9px 10px;background:var(--accent);color:white;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s}
 .auth-btn:hover{background:var(--accent-hover)}
 .auth-msg{margin-top:10px;font-size:11px;color:var(--muted);line-height:1.4;min-height:16px}
-.top-actions{display:flex;align-items:center;gap:8px}
 .sync-btn{border:1px solid var(--border);border-radius:16px;background:var(--surface2);color:var(--text);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;padding:5px 10px}
 .sync-btn:disabled{opacity:0.55;cursor:not-allowed}
 .sync-status{font-size:11px;color:var(--muted)}
@@ -412,7 +412,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .kcal-date-input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:4px 8px;outline:none;cursor:pointer}
 .kcal-date-input:focus{border-color:var(--accent)}
 .kcal-goal-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);flex-wrap:wrap}
-.kcal-goal-input{width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:4px 6px;text-align:right;outline:none}
+.kcal-goal-input{width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:4px 6px;text-align:right;outline:none}
 .kcal-goal-input:focus{border-color:var(--accent)}
 .kcal-save-btn{border:1px solid var(--border);border-radius:16px;background:var(--surface2);color:var(--muted);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;transition:all 0.15s}
 .kcal-save-btn:hover{color:var(--accent);border-color:rgba(249,115,22,0.4)}
@@ -568,11 +568,6 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
   <div class="stat-pill">VO2max <b id="hdrVO2">—</b></div>
   <div class="stat-pill" id="hdrWeightPill" style="display:none">Weight <b id="hdrWeight">—</b></div>
   <div class="hdr-spacer"></div>
-  <div class="top-actions">
-    <button class="refresh-btn" id="refreshOverviewBtn" type="button" title="Reload from Intervals.icu">Refresh</button>
-    <button class="sync-btn" id="syncIntervalsBtn" type="button" style="display:none">Sync to DB</button>
-    <span class="sync-status" id="syncStatus">Loading…</span>
-  </div>
   <button class="signout-btn" id="signOutBtn" type="button" style="display:none">Sign out</button>
   <div class="phase-wrap">
     <span class="badge" id="hdrPhase" style="background:var(--tst-bg);color:var(--tst)">Phase 0 – Testing</span>
@@ -617,6 +612,11 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
       </div>
     </nav>
     <div class="sb-footer">
+      <div class="sb-actions">
+        <button class="refresh-btn" id="refreshOverviewBtn" type="button" title="Reload from Intervals.icu">Refresh</button>
+        <button class="sync-btn" id="syncIntervalsBtn" type="button" style="display:none">Sync to DB</button>
+        <span class="sync-status" id="syncStatus">Loading…</span>
+      </div>
       <div class="ftp-card">
         <div class="ftp-val" id="sbFTP">239<span style="font-size:13px;font-weight:500">W</span></div>
         <div class="ftp-lbl">Current FTP</div>
@@ -2638,7 +2638,7 @@ if ('serviceWorker' in navigator) {
     fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '7c3570' },
-      body: JSON.stringify({ sessionId: '7c3570', location: 'index.html:debugNutritionOverflow', message: 'overflow check', data: { viewportWidth: vw, results: results }, timestamp: Date.now(), runId: 'post-fix-2' })
+      body: JSON.stringify({ sessionId: '7c3570', location: 'index.html:debugNutritionOverflow', message: 'overflow check', data: { viewportWidth: vw, results: results }, timestamp: Date.now(), runId: 'post-fix-3' })
     }).catch(function() {});
   }
   function tryCheck() {
