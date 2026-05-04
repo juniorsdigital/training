@@ -478,6 +478,14 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .kcal-ov-row .k{color:var(--muted)}
 .kcal-ov-row .v{font-weight:700;font-variant-numeric:tabular-nums}
 .kcal-ov-empty{padding:14px;font-size:12px;color:var(--muted);font-style:italic;text-align:center}
+.kcal-ov-day-label{padding:6px 14px 0;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+.kcal-ov-macros{padding:6px 14px 10px;display:flex;flex-direction:column;gap:5px}
+.kcal-ov-macro-row{display:flex;align-items:center;gap:8px}
+.kcal-ov-macro-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;width:44px;flex-shrink:0}
+.kcal-ov-macro-nums{font-size:11px;font-variant-numeric:tabular-nums;color:var(--text);width:90px;text-align:right;flex-shrink:0;white-space:nowrap}
+.kcal-ov-macro-bar-wrap{flex:1;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;min-width:30px}
+.kcal-ov-macro-bar-fill{height:100%;border-radius:2px;transition:width 0.6s ease}
+.kcal-ov-macro-bar-fill.over{background:var(--z5)!important}
 </style>
 </head>
 <body>
@@ -658,7 +666,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
       </div>
       <div class="kcal-ov-card" id="kcalOverviewCard" style="display:none">
         <div class="kcal-ov-hdr">
-          <span class="card-title">Today's calories</span>
+          <span class="card-title">Today's Nutrition</span>
           <span class="badge" id="kcalOvBadge" style="background:var(--accent-dim);color:var(--accent)">Nutrition</span>
         </div>
         <div id="kcalOvBody"><div class="kcal-ov-empty">No calorie data logged yet.</div></div>
@@ -1205,11 +1213,35 @@ async function loadDashboardOverview() {
     renderHomeOverview(payload);
     renderToday();
     renderZoneBars();
-    // Load today's calorie data for overview card
+    // Load today's calorie + macro data for overview card
     try {
       await kcalFetch(localDate);
+      const autoGoals = getAutoGoalsForDate(localDate);
+      // Use saved goal if available, else fall back to training-day goals
+      if (!kcalGoal) {
+        kcalGoal = {
+          goal_calories: autoGoals.kcal,
+          carbs_goal: autoGoals.carbs,
+          protein_goal: autoGoals.protein,
+          fat_goal: autoGoals.fat,
+          _auto: true
+        };
+      }
       const total = kcalLogs.reduce((s, e) => s + (e.calories || 0), 0);
-      renderCalorieOverviewCard(total, kcalGoal?.goal_calories ?? null, kcalBurntFromIntervals);
+      const totalCarbs = kcalLogs.reduce((s, e) => s + (e.carbs || 0), 0);
+      const totalProtein = kcalLogs.reduce((s, e) => s + (e.protein || 0), 0);
+      const totalFat = kcalLogs.reduce((s, e) => s + (e.fat || 0), 0);
+      renderCalorieOverviewCard(
+        total,
+        kcalGoal?.goal_calories ?? null,
+        kcalBurntFromIntervals,
+        {
+          carbs: totalCarbs, carbsGoal: kcalGoal?.carbs_goal ?? null,
+          protein: totalProtein, proteinGoal: kcalGoal?.protein_goal ?? null,
+          fat: totalFat, fatGoal: kcalGoal?.fat_goal ?? null,
+          dayLabel: autoGoals.dayLabel
+        }
+      );
     } catch (_) { /* non-critical */ }
     setSyncStatus(`Updated ${new Date().toLocaleTimeString()}`);
   } catch (error) {
@@ -1775,6 +1807,18 @@ function getDayIdx(date) {
 function getZoneColor(t) { return `var(${Z_COLOR_VAR[t]||'--muted'})`; }
 function getNutType(t) { return NUT_MAP[t] || 'z2only'; }
 
+// Returns NUT_GOALS for the plan day matching a given YYYY-MM-DD date string.
+// Falls back to 'rest' goals if the date is outside the plan or unmapped.
+function getAutoGoalsForDate(dateStr) {
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  const weekIdx = getWeekIdx(d);
+  const dayIdx = getDayIdx(d);
+  const wk = (weekIdx >= 0 && weekIdx < WEEKS.length) ? WEEKS[weekIdx] : null;
+  const day = wk ? wk.days[dayIdx] : null;
+  const nutType = day ? getNutType(day.t) : 'rest';
+  return { ...NUT_GOALS[nutType], nutType, dayLabel: NUT_DATA[nutType]?.name || 'Rest Day' };
+}
+
 // =================== CURRENT STATE ===================
 const today = new Date(); today.setHours(0,0,0,0);
 let currentWeekIdx = Math.max(0, Math.min(34, getWeekIdx(today)));
@@ -2232,7 +2276,18 @@ function kcalRenderTracker() {
 
   // Update overview card too if we're looking at today
   if (kcalCurrentDate === getLocalISODate(today)) {
-    renderCalorieOverviewCard(total, goal, kcalBurntFromIntervals);
+    const autoGoals = getAutoGoalsForDate(kcalCurrentDate);
+    renderCalorieOverviewCard(
+      total,
+      goal,
+      kcalBurntFromIntervals,
+      {
+        carbs: totalCarbs, carbsGoal: carbsGoal,
+        protein: totalProtein, proteinGoal: proteinGoal,
+        fat: totalFat, fatGoal: fatGoal,
+        dayLabel: autoGoals.dayLabel
+      }
+    );
   }
 }
 
@@ -2241,8 +2296,24 @@ async function loadNutritionTracker(date) {
   kcalCurrentDate = date;
   document.getElementById('kcalDateInput').value = date;
   document.getElementById('kcalErr').style.display = 'none';
+
+  // Detect training day type for this date and sync the dropdown
+  const autoGoals = getAutoGoalsForDate(date);
+  const dayTypeSelect = document.getElementById('kcalDayTypeSelect');
+  if (dayTypeSelect) dayTypeSelect.value = autoGoals.nutType || '';
+
   try {
     await kcalFetch(date);
+    // If no manual goal saved, apply training-day goals automatically
+    if (!kcalGoal) {
+      kcalGoal = {
+        goal_calories: autoGoals.kcal,
+        carbs_goal: autoGoals.carbs,
+        protein_goal: autoGoals.protein,
+        fat_goal: autoGoals.fat,
+        _auto: true
+      };
+    }
     kcalRenderTracker();
   } catch (e) {
     const errEl = document.getElementById('kcalErr');
@@ -2251,13 +2322,14 @@ async function loadNutritionTracker(date) {
   }
 }
 
-function renderCalorieOverviewCard(eaten, goal, burnt) {
+// macros = { carbs, carbsGoal, protein, proteinGoal, fat, fatGoal, dayLabel }
+function renderCalorieOverviewCard(eaten, goal, burnt, macros) {
   const card = document.getElementById('kcalOverviewCard');
   const body = document.getElementById('kcalOvBody');
   const badge = document.getElementById('kcalOvBadge');
   card.style.display = '';
 
-  if (eaten == null && goal == null) {
+  if (eaten == null && goal == null && !macros) {
     body.innerHTML = '<div class="kcal-ov-empty">No calorie data logged yet.</div>';
     badge.textContent = 'Nutrition';
     return;
@@ -2269,8 +2341,35 @@ function renderCalorieOverviewCard(eaten, goal, burnt) {
   badge.style.background = over ? 'rgba(239,68,68,0.15)' : 'var(--accent-dim)';
   badge.style.color = over ? 'var(--z5)' : 'var(--accent)';
 
+  // Day label (training day type)
+  const dayLabelHtml = macros?.dayLabel
+    ? `<div class="kcal-ov-day-label">${escapeHtml(macros.dayLabel)}</div>`
+    : '';
+
+  // Macro bars
+  function macroPct(val, g) { return g ? Math.min(100, Math.round(((val || 0) / g) * 100)) : 0; }
+  function macroNums(val, g) { return g ? `${val || 0}g / ${g}g` : `${val || 0}g`; }
+  const macroHtml = macros ? `
+    <div class="kcal-ov-macros">
+      <div class="kcal-ov-macro-row">
+        <span class="kcal-ov-macro-lbl" style="color:var(--z2)">Carbs</span>
+        <span class="kcal-ov-macro-nums">${macroNums(macros.carbs, macros.carbsGoal)}</span>
+        <div class="kcal-ov-macro-bar-wrap"><div class="kcal-ov-macro-bar-fill${macros.carbsGoal && macros.carbs > macros.carbsGoal ? ' over' : ''}" style="width:${macroPct(macros.carbs, macros.carbsGoal)}%;background:var(--z2)"></div></div>
+      </div>
+      <div class="kcal-ov-macro-row">
+        <span class="kcal-ov-macro-lbl" style="color:var(--z3)">Protein</span>
+        <span class="kcal-ov-macro-nums">${macroNums(macros.protein, macros.proteinGoal)}</span>
+        <div class="kcal-ov-macro-bar-wrap"><div class="kcal-ov-macro-bar-fill${macros.proteinGoal && macros.protein > macros.proteinGoal ? ' over' : ''}" style="width:${macroPct(macros.protein, macros.proteinGoal)}%;background:var(--z3)"></div></div>
+      </div>
+      <div class="kcal-ov-macro-row">
+        <span class="kcal-ov-macro-lbl" style="color:var(--muted)">Fat</span>
+        <span class="kcal-ov-macro-nums">${macroNums(macros.fat, macros.fatGoal)}</span>
+        <div class="kcal-ov-macro-bar-wrap"><div class="kcal-ov-macro-bar-fill${macros.fatGoal && macros.fat > macros.fatGoal ? ' over' : ''}" style="width:${macroPct(macros.fat, macros.fatGoal)}%;background:var(--muted)"></div></div>
+      </div>
+    </div>` : '';
+
   const rows = [];
-  if (goal) rows.push(`<div class="kcal-ov-row"><span class="k">Goal</span><span class="v">${goal} kcal</span></div>`);
+  if (goal) rows.push(`<div class="kcal-ov-row"><span class="k">Calorie goal</span><span class="v">${goal} kcal</span></div>`);
   const remaining = goal ? goal - (eaten || 0) : null;
   if (remaining !== null) {
     const label = remaining < 0 ? 'Over by' : 'Remaining';
@@ -2280,6 +2379,7 @@ function renderCalorieOverviewCard(eaten, goal, burnt) {
   if (burnt) rows.push(`<div class="kcal-ov-row"><span class="k">Burnt (Intervals)</span><span class="v" style="color:var(--z2)">${Math.round(burnt)} kcal</span></div>`);
 
   body.innerHTML = `
+    ${dayLabelHtml}
     <div class="kcal-ov-nums">
       <span class="kcal-ov-eaten${over ? ' over' : ''}" style="${over ? 'color:var(--z5)' : ''}">${eaten || 0}</span>
       <span class="kcal-ov-sep">/</span>
@@ -2287,6 +2387,7 @@ function renderCalorieOverviewCard(eaten, goal, burnt) {
       <span class="kcal-ov-label" style="margin-left:4px">kcal eaten</span>
     </div>
     <div class="kcal-ov-bar-wrap"><div class="kcal-ov-bar-fill${over ? ' over' : ''}" style="width:${pct}%"></div></div>
+    ${macroHtml}
     ${rows.length ? `<div class="kcal-ov-rows">${rows.join('')}</div>` : ''}`;
 }
 
