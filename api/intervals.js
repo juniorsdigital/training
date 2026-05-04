@@ -4,7 +4,27 @@ const { intervalsAuthorizationValue } = require('./lib/intervalsBasicAuth.js');
 const INTERVALS_BASE_URL = 'https://intervals.icu/api/v1';
 
 async function fetchIntervalsActivities(intervalsApiKey) {
-  const response = await fetch(`${INTERVALS_BASE_URL}/athlete/0/activities?limit=25`, {
+  const activitiesUrl = `${INTERVALS_BASE_URL}/athlete/0/activities?limit=25`;
+  // #region agent log
+  fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '4616e5' },
+    body: JSON.stringify({
+      sessionId: '4616e5',
+      location: 'api/intervals.js:fetchIntervalsActivities:entry',
+      message: 'intervals activities request',
+      data: {
+        activitiesUrl,
+        queryHasOldest: /[?&]oldest=/.test(activitiesUrl),
+        athletePathSegment: '0'
+      },
+      timestamp: Date.now(),
+      runId: 'pre-fix',
+      hypothesisId: 'H1'
+    })
+  }).catch(() => {});
+  // #endregion
+  const response = await fetch(activitiesUrl, {
     headers: {
       Authorization: intervalsAuthorizationValue(intervalsApiKey)
     }
@@ -12,6 +32,24 @@ async function fetchIntervalsActivities(intervalsApiKey) {
 
   if (!response.ok) {
     const text = await response.text();
+    // #region agent log
+    fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '4616e5' },
+      body: JSON.stringify({
+        sessionId: '4616e5',
+        location: 'api/intervals.js:fetchIntervalsActivities:error',
+        message: 'intervals activities non-ok response',
+        data: {
+          status: response.status,
+          bodyPreview: String(text).slice(0, 400)
+        },
+        timestamp: Date.now(),
+        runId: 'pre-fix',
+        hypothesisId: 'H2'
+      })
+    }).catch(() => {});
+    // #endregion
     throw new Error(`Intervals.icu API error: ${text || response.status}`);
   }
 
@@ -79,6 +117,21 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: 'Missing Intervals API key.' });
     }
 
+    // #region agent log
+    fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '4616e5' },
+      body: JSON.stringify({
+        sessionId: '4616e5',
+        location: 'api/intervals.js:handler:beforeFetch',
+        message: 'sync handler invoking fetchIntervalsActivities',
+        data: { athleteIdEnv: process.env.INTERVALS_ATHLETE_ID ? 'set' : 'unset' },
+        timestamp: Date.now(),
+        runId: 'pre-fix',
+        hypothesisId: 'H3'
+      })
+    }).catch(() => {});
+    // #endregion
     const activities = await fetchIntervalsActivities(intervalsApiKey);
     const savedCount = await persistActivitiesToSupabase(Array.isArray(activities) ? activities : []);
 
