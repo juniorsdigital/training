@@ -409,7 +409,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .kcal-date-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .kcal-date-input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:4px 8px;outline:none;cursor:pointer}
 .kcal-date-input:focus{border-color:var(--accent)}
-.kcal-goal-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.kcal-goal-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end}
 .kcal-goal-input{width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:4px 6px;text-align:right;outline:none}
 .kcal-goal-input:focus{border-color:var(--accent)}
 .kcal-save-btn{border:1px solid var(--border);border-radius:16px;background:var(--surface2);color:var(--muted);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;transition:all 0.15s}
@@ -2611,5 +2611,56 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<!-- #region agent log -->
+<script>
+(function debugNutritionOverflow() {
+  function checkOverflows() {
+    var checks = [
+      { id: 'kcal-goal-wrap', sel: '.kcal-goal-wrap', hyp: 'H-A' },
+      { id: 'kcal-section-hdr', sel: '.kcal-section-hdr', hyp: 'H-C' },
+      { id: 'kcal-log-table', sel: '.kcal-log-table', hyp: 'H-B' },
+      { id: 'kcal-add-row', sel: '.kcal-add-row', hyp: 'H-D' },
+      { id: 'kcal-section', sel: '.kcal-section', hyp: 'H-B' },
+    ];
+    var vw = window.innerWidth;
+    var results = checks.map(function(c) {
+      var el = document.querySelector(c.sel);
+      if (!el) return { selector: c.sel, found: false, hyp: c.hyp };
+      var rect = el.getBoundingClientRect();
+      var scrollW = el.scrollWidth;
+      var clientW = el.clientWidth;
+      var overflows = scrollW > clientW || rect.right > vw + 2;
+      return { selector: c.sel, hyp: c.hyp, viewportWidth: vw, scrollWidth: scrollW, clientWidth: clientW, rectRight: Math.round(rect.right), overflows: overflows };
+    });
+    fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '7c3570' },
+      body: JSON.stringify({ sessionId: '7c3570', location: 'index.html:debugNutritionOverflow', message: 'overflow check', data: { viewportWidth: vw, results: results }, timestamp: Date.now(), runId: 'post-fix' })
+    }).catch(function() {});
+  }
+  function tryCheck() {
+    var panel = document.querySelector('#panel-nutrition');
+    if (panel && (panel.style.display === 'block' || getComputedStyle(panel).display === 'block')) {
+      checkOverflows();
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(tryCheck, 500);
+    window.addEventListener('resize', tryCheck);
+    var origNav = window.navigateToPanel;
+    if (typeof origNav === 'function') {
+      window.navigateToPanel = function(p) {
+        origNav.apply(this, arguments);
+        if (p === 'nutrition') setTimeout(checkOverflows, 400);
+      };
+    }
+    document.querySelectorAll('[data-panel="nutrition"]').forEach(function(el) {
+      el.addEventListener('click', function() { setTimeout(checkOverflows, 600); });
+    });
+  });
+})();
+</script>
+<!-- #endregion -->
 </body>
 </html>
