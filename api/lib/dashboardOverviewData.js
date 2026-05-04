@@ -209,6 +209,10 @@ async function buildDashboardOverviewPayload(localDate) {
     }
   }
 
+  // #region agent log
+  fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9571d2'},body:JSON.stringify({sessionId:'9571d2',location:'dashboardOverviewData.js:212',message:'vo2max fields - wellness',hypothesisId:'A-B-C-D',data:{wellnessStatus:wellnessRes.status,wellnessOk:wellnessRes.ok,wo_vo2max:wellness?.vo2max,wo_vo2_max:wellness?.vo2_max,wo_vo2Max:wellness?.vo2Max,wo_icu_vo2max:wellness?.icu_vo2max,w_full:wellness?JSON.stringify(Object.fromEntries(Object.entries(wellness).filter(([k])=>k.toLowerCase().includes('vo2')))):null},timestamp:Date.now()})}).catch(()=>{});
+  fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9571d2'},body:JSON.stringify({sessionId:'9571d2',location:'dashboardOverviewData.js:212',message:'vo2max fields - athlete',hypothesisId:'A-B-C-D',data:{athleteOk:athleteRes.ok,ao_vo2max:athlete?.vo2max,ao_vo2_max:athlete?.vo2_max,ao_vo2Max:athlete?.vo2Max,ao_icu_vo2max:athlete?.icu_vo2max,a_full:athlete?JSON.stringify(Object.fromEntries(Object.entries(athlete).filter(([k])=>k.toLowerCase().includes('vo2')))):null},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   const vitals = pickVitals(athlete, wellness);
   const primaryActivity = pickPrimaryActivity(activities, localDate);
   const activitiesToday = activities
