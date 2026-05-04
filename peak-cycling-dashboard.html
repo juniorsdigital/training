@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peak Cycling Dashboard 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0b0a;--surface:#161513;--surface2:#1e1c1a;--surface3:#252320;
+  --border:rgba(255,255,255,0.08);--text:#e8e6e3;--muted:#8a8680;--faint:#4a4845;
+  --accent:#f97316;--accent-dim:rgba(249,115,22,0.15);--accent-hover:#ea6c0a;
+  --radius:10px;--radius-sm:6px;--sidebar-w:210px;--header-h:64px;
+  --z1:#64748b;--z1-bg:rgba(100,116,139,0.15);
+  --z2:#3b82f6;--z2-bg:rgba(59,130,246,0.15);
+  --z3:#84cc16;--z3-bg:rgba(132,204,22,0.15);
+  --z4:#f97316;--z4-bg:rgba(249,115,22,0.15);
+  --z5:#ef4444;--z5-bg:rgba(239,68,68,0.15);
+  --spr:#a855f7;--spr-bg:rgba(168,85,247,0.15);
+  --tst:#14b8a6;--tst-bg:rgba(20,184,166,0.15);
+  --rst:#374151;--rst-bg:rgba(55,65,81,0.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+.header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--surface);border-bottom:1px solid var(--border);z-index:100;display:flex;align-items:center;padding:0 16px;gap:12px}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo-text{font-size:15px;font-weight:700;color:var(--text)}
+.logo-text span{color:var(--accent)}
+.hd{width:1px;height:28px;background:var(--border);flex-shrink:0}
+.stat-pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+.stat-pill b{color:var(--text)}
+.phase-wrap{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.badge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase}
+.prog-wrap{display:flex;align-items:center;gap:6px}
+.prog-lbl{font-size:11px;color:var(--muted);white-space:nowrap}
+.prog-bar{width:90px;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:3px;transition:width 1s ease}
+.theme-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;flex-shrink:0}
+.theme-btn:hover{color:var(--text);background:var(--surface3)}
+.app{display:flex;padding-top:var(--header-h);min-height:100vh}
+.sidebar{position:fixed;left:0;top:var(--header-h);bottom:0;width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:90;overflow-y:auto}
+.nav{padding:10px 6px;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all 0.15s;margin-bottom:1px}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.nav-sec{padding:14px 17px 5px;font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:0.8px}
+.sb-footer{padding:10px;border-top:1px solid var(--border)}
+.ftp-card{background:var(--accent-dim);border:1px solid rgba(249,115,22,0.3);border-radius:var(--radius);padding:12px;text-align:center}
+.ftp-val{font-size:26px;font-weight:800;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums}
+.ftp-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+.ftp-goal{font-size:10px;color:var(--muted);margin-top:5px}
+.ftp-goal span{color:var(--z3);font-weight:700}
+.main{margin-left:var(--sidebar-w);flex:1;padding:20px;overflow-x:hidden;min-width:0}
+.panel{display:none}
+.panel.active{display:block}
+/* TODAY */
+.today-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.today-date{font-size:12px;color:var(--muted)}
+.today-title{font-size:22px;font-weight:800;color:var(--text);margin-top:2px;letter-spacing:-0.4px}
+.today-phase{font-size:12px;color:var(--muted);margin-top:3px}
+.today-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:1100px){.today-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.today-grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-hdr{padding:12px 14px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.card-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px}
+.card-body{padding:14px}
+.workout-hero{display:flex;flex-direction:column;gap:10px}
+.wtype-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;width:fit-content}
+.workout-name{font-size:18px;font-weight:800;color:var(--text);line-height:1.2;letter-spacing:-0.3px}
+.workout-watts{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.workout-watts-lbl{font-size:10px;color:var(--muted);margin-top:1px}
+.session-block{background:var(--surface2);border-radius:var(--radius-sm);padding:9px 11px;border-left:3px solid}
+.sess-time{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px}
+.sess-desc{font-size:12px;color:var(--text);line-height:1.5}
+.sess-w{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:3px}
+.macro-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.macro-item{background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;text-align:center}
+.macro-val{font-size:16px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+.macro-unit{font-size:10px;color:var(--muted)}
+.macro-lbl{font-size:10px;color:var(--muted);margin-top:1px}
+.macro-cal{background:var(--accent-dim);border:1px solid rgba(249,115,22,0.2);border-radius:var(--radius-sm);padding:8px;text-align:center;margin-bottom:10px}
+.macro-cal .val{font-size:18px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.macro-cal .lbl{font-size:10px;color:var(--muted)}
+.timing-list{list-style:none;display:flex;flex-direction:column;gap:5px}
+.timing-item{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--muted);line-height:1.4}
+.tdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.stretch-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.stretch-item{display:flex;align-items:flex-start;gap:8px;padding:7px 9px;background:var(--surface2);border-radius:var(--radius-sm)}
+.si-icon{font-size:14px;flex-shrink:0;width:22px}
+.si-info{flex:1}
+.si-name{font-size:11px;font-weight:700;color:var(--text);margin-bottom:1px}
+.si-detail{font-size:10px;color:var(--muted)}
+.si-pri{font-size:11px;color:var(--accent);flex-shrink:0}
+/* WEEK */
+.week-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.week-title{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
+.week-meta{font-size:11px;color:var(--muted)}
+.wnav{display:flex;align-items:center;gap:6px}
+.wnav-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;font-size:14px}
+.wnav-btn:hover{background:var(--surface2);color:var(--text)}
+.week-tss{font-size:12px;color:var(--muted)}
+.week-tss b{color:var(--accent);font-variant-numeric:tabular-nums}
+.wdays{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+@media(max-width:900px){.wdays{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:550px){.wdays{grid-template-columns:repeat(2,1fr)}}
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color 0.15s,transform 0.15s}
+.day-card:hover{transform:translateY(-1px)}
+.day-card.today-hl{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.day-top{padding:7px 9px 5px;border-bottom:1px solid var(--border)}
+.day-name{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+.day-date{font-size:11px;color:var(--text);margin-top:1px}
+.day-body{padding:7px 9px 9px}
+.day-tag{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px}
+.day-title-txt{font-size:11px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:3px}
+.day-watts-txt{font-size:10px;font-variant-numeric:tabular-nums;font-weight:700}
+.day-det{font-size:10px;color:var(--muted);line-height:1.4;margin-top:3px}
+/* CALENDAR */
+.cal-ctrl{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.cal-filter{display:flex;gap:5px;flex-wrap:wrap}
+.cal-pb{padding:3px 9px;border-radius:16px;font-size:10px;font-weight:700;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;transition:all 0.15s;letter-spacing:0.3px}
+.cal-pb.active,.cal-pb:hover{background:var(--accent-dim);border-color:rgba(249,115,22,0.4);color:var(--accent)}
+.cal-search{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 9px;font-size:11px;color:var(--text);font-family:inherit;outline:none;width:140px;margin-left:auto}
+.cal-search:focus{border-color:var(--accent)}
+.cal-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+.cal-tbl{width:100%;border-collapse:collapse;font-size:11px;min-width:900px}
+.cal-tbl th{background:var(--surface2);padding:7px 8px;text-align:left;font-weight:700;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border)}
+.cal-tbl td{padding:5px 7px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:top;line-height:1.3}
+.cal-tbl tr:hover td{background:rgba(255,255,255,0.02)}
+.cal-tbl tr.cur-wk td{background:rgba(249,115,22,0.05)}
+.cal-tbl tr.cur-wk td:first-child{border-left:2px solid var(--accent)}
+.cal-wk{font-weight:700;color:var(--text);white-space:nowrap}
+.cal-pill{display:inline-block;padding:1px 5px;border-radius:6px;font-size:9px;font-weight:700;margin-bottom:2px}
+.cal-day-txt{color:var(--muted);font-size:10px;line-height:1.3;white-space:pre-line}
+.cal-tss{font-variant-numeric:tabular-nums;font-weight:700;color:var(--text);white-space:nowrap;text-align:right}
+/* ZONES */
+.zones-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:3px}
+.zones-sub{font-size:12px;color:var(--muted);margin-bottom:18px}
+.zones-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:700px){.zones-2col{grid-template-columns:1fr}}
+.zone-bars-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.zone-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.zone-row:last-child{margin-bottom:0}
+.zname-col{width:90px;flex-shrink:0}
+.z-code{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+.z-lbl{font-size:9px;color:var(--muted);margin-top:1px}
+.zbar-wrap{flex:1;height:26px;background:var(--surface2);border-radius:4px;overflow:hidden;position:relative}
+.zbar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 8px}
+.zbar-txt{font-size:10px;font-weight:700;color:white;font-variant-numeric:tabular-nums;white-space:nowrap}
+.zinfo-col{text-align:right;width:80px;flex-shrink:0}
+.zwatts{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)}
+.zhr{font-size:10px;color:var(--muted)}
+.zone-detail-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.zd-row{padding:9px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px}
+.zd-row:last-child{border-bottom:none;padding-bottom:0}
+.zdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.zd-title{font-size:12px;font-weight:700;margin-bottom:2px}
+.zd-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.goals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+@media(max-width:800px){.goals-grid{grid-template-columns:repeat(2,1fr)}}
+.goal-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center}
+.g-curr{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text)}
+.g-arrow{font-size:12px;color:var(--muted);margin:2px 0}
+.g-target{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent)}
+.g-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-top:3px}
+.phase-prog-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+@media(max-width:800px){.phase-prog-grid{grid-template-columns:repeat(3,1fr)}}
+/* NUTRITION */
+.nut-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.nt{padding:5px 11px;border-radius:16px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;transition:all 0.15s}
+.nt.active{background:var(--accent-dim);border-color:rgba(249,115,22,0.4);color:var(--accent)}
+.nut-cont{display:none}
+.nut-cont.active{display:block}
+.nut-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:700px){.nut-2col{grid-template-columns:1fr}}
+.nut-mr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
+.nut-mr:last-child{border-bottom:none}
+.nut-mn{font-size:12px;font-weight:600;color:var(--text)}
+.nut-mv{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.nut-timing{background:var(--surface2);border-radius:var(--radius);padding:12px;margin-bottom:10px}
+.nt-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.nt-text{font-size:11px;color:var(--text);line-height:1.6}
+.nut-note{font-size:11px;color:var(--muted);font-style:italic;background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;line-height:1.5}
+.supp-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:4px}
+@media(max-width:700px){.supp-grid{grid-template-columns:1fr}}
+.supp-item{background:var(--surface2);border-radius:var(--radius-sm);padding:9px 11px}
+.sn{font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px}
+.sd{font-size:11px;color:var(--accent);font-weight:600}
+.st{font-size:10px;color:var(--muted);margin-top:2px}
+.ob-tbl{width:100%;border-collapse:collapse}
+.ob-tbl th{background:var(--surface2);padding:7px 9px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid var(--border)}
+.ob-tbl td{padding:7px 9px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px;vertical-align:top;line-height:1.4}
+.ob-tbl tr:last-child td{border-bottom:none}
+/* RECOVERY */
+.rec-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:800px){.rec-2col{grid-template-columns:1fr}}
+.rec-sec-title{font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px}
+.sfi{background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:7px}
+.sfi-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.sfi-name{font-size:12px;font-weight:700;color:var(--text)}
+.sfi-pri{font-size:12px}
+.sfi-target{font-size:10px;font-weight:700;color:var(--z2);margin-bottom:3px}
+.sfi-dur{font-size:10px;color:var(--muted);margin-bottom:3px}
+.sfi-note{font-size:10px;color:var(--muted);line-height:1.5;font-style:italic}
+/* ZONE BG/COLOR UTILS */
+.bg-rest{background:var(--rst-bg)} .c-rest{color:var(--rst)}
+.bg-z1{background:var(--z1-bg)} .c-z1{color:var(--z1)}
+.bg-z2{background:var(--z2-bg)} .c-z2{color:var(--z2)}
+.bg-ss{background:var(--z3-bg)} .c-ss{color:var(--z3)}
+.bg-thr{background:var(--z4-bg)} .c-thr{color:var(--z4)}
+.bg-vo2{background:var(--z5-bg)} .c-vo2{color:var(--z5)}
+.bg-spr{background:var(--spr-bg)} .c-spr{color:var(--spr)}
+.bg-tst{background:var(--tst-bg)} .c-tst{color:var(--tst)}
+/* LIGHT MODE */
+[data-theme="light"]{
+  --bg:#f4f3f0;--surface:#fff;--surface2:#f7f6f3;--surface3:#edecea;
+  --border:rgba(0,0,0,0.1);--text:#1a1916;--muted:#6b6966;--faint:#b0afab;
+  --z1-bg:rgba(100,116,139,0.1);--z2-bg:rgba(59,130,246,0.1);
+  --z3-bg:rgba(132,204,22,0.1);--z4-bg:rgba(249,115,22,0.1);
+  --z5-bg:rgba(239,68,68,0.1);--spr-bg:rgba(168,85,247,0.1);
+  --tst-bg:rgba(20,184,166,0.1);--rst-bg:rgba(55,65,81,0.07);
+  --accent-dim:rgba(249,115,22,0.12);
+}
+.sec-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:12px;letter-spacing:-0.3px}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--faint);border-radius:3px}
+.auth-overlay{position:fixed;inset:0;background:rgba(12,11,10,0.96);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+.auth-card{width:min(430px,100%);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.auth-title{font-size:20px;font-weight:800;letter-spacing:-0.2px;margin-bottom:7px}
+.auth-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.auth-row{display:flex;flex-direction:column;gap:5px;margin-bottom:9px}
+.auth-label{font-size:11px;color:var(--muted)}
+.auth-input{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-family:inherit;font-size:13px;padding:9px 10px;outline:none}
+.auth-input:focus{border-color:var(--accent)}
+.auth-btn{width:100%;border:0;border-radius:var(--radius-sm);padding:9px 10px;background:var(--accent);color:white;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s}
+.auth-btn:hover{background:var(--accent-hover)}
+.auth-msg{margin-top:10px;font-size:11px;color:var(--muted);line-height:1.4;min-height:16px}
+.top-actions{display:flex;align-items:center;gap:8px}
+.sync-btn{border:1px solid var(--border);border-radius:16px;background:var(--surface2);color:var(--text);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;padding:5px 10px}
+.sync-btn:disabled{opacity:0.55;cursor:not-allowed}
+.sync-status{font-size:11px;color:var(--muted)}
+.app-shell.is-hidden{display:none!important}
+.hdr-spacer{flex:1;min-width:8px}
+.signout-btn{border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:5px 10px}
+.signout-btn:hover{color:var(--text);background:var(--surface2)}
+.refresh-btn{border:1px solid var(--border);border-radius:16px;background:var(--surface2);color:var(--text);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;padding:5px 10px}
+.refresh-btn:disabled{opacity:0.55;cursor:not-allowed}
+.home-intro{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+@media(max-width:1000px){.home-grid{grid-template-columns:1fr}}
+.home-vitals-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:500px){.home-vitals-row{grid-template-columns:1fr}}
+.home-vital{background:var(--surface2);border-radius:var(--radius-sm);padding:12px;text-align:center;border:1px solid var(--border)}
+.home-vital .hv-val{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text)}
+.home-vital .hv-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.home-status{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:10px}
+.home-status.done{background:rgba(34,197,94,0.15);color:#4ade80}
+.home-status.pending{background:rgba(234,179,8,0.15);color:#facc15}
+.home-status.rest{background:var(--rst-bg);color:var(--rst)}
+.home-stat-row{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.home-stat-row:last-child{border-bottom:none}
+.home-stat-k{color:var(--muted)}
+.home-stat-v{font-weight:700;font-variant-numeric:tabular-nums}
+.home-list{margin:0;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.55}
+.home-err{font-size:11px;color:var(--z5);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <div class="auth-title">Secure Dashboard Login</div>
+    <div class="auth-sub">Sign in with your Supabase account to access this dashboard and sync Intervals.icu data.</div>
+    <form id="authForm">
+      <div class="auth-row">
+        <label class="auth-label" for="emailInput">Email</label>
+        <input class="auth-input" id="emailInput" type="email" autocomplete="email" required>
+      </div>
+      <div class="auth-row">
+        <label class="auth-label" for="passwordInput">Password</label>
+        <input class="auth-input" id="passwordInput" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="auth-btn" type="submit" id="authSubmitBtn">Sign In</button>
+      <div class="auth-msg" id="authMsg"></div>
+    </form>
+  </div>
+</div>
+
+<div id="appShell" class="app-shell is-hidden">
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none" style="color:var(--accent)">
+      <circle cx="13" cy="13" r="11.5" stroke="currentColor" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="4.5" fill="currentColor" opacity="0.25"/>
+      <circle cx="13" cy="13" r="2" fill="currentColor"/>
+      <line x1="13" y1="1.5" x2="13" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="13" y1="21" x2="13" y2="24.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="1.5" y1="13" x2="5" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="21" y1="13" x2="24.5" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <span class="logo-text">Peak<span>Cycling</span> 2026</span>
+  </div>
+  <div class="hd"></div>
+  <div class="stat-pill">FTP <b id="hdrFTP">—</b></div>
+  <div class="stat-pill">W/kg <b id="hdrWkg">—</b></div>
+  <div class="stat-pill">VO2max <b id="hdrVO2">—</b></div>
+  <div class="stat-pill" id="hdrWeightPill" style="display:none">Weight <b id="hdrWeight">—</b></div>
+  <div class="hdr-spacer"></div>
+  <div class="top-actions">
+    <button class="refresh-btn" id="refreshOverviewBtn" type="button" title="Reload from Intervals.icu">Refresh</button>
+    <button class="sync-btn" id="syncIntervalsBtn" type="button">Sync to DB</button>
+    <span class="sync-status" id="syncStatus">Sign in to load data</span>
+  </div>
+  <button class="signout-btn" id="signOutBtn" type="button">Sign out</button>
+  <div class="phase-wrap">
+    <span class="badge" id="hdrPhase" style="background:var(--tst-bg);color:var(--tst)">Phase 0 – Testing</span>
+    <div class="prog-wrap">
+      <span class="prog-lbl" id="progLbl">Wk 1/35</span>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:3%"></div></div>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <nav class="nav">
+      <div class="nav-sec">Home</div>
+      <div class="nav-item active" data-panel="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Overview
+      </div>
+      <div class="nav-sec">Training plan</div>
+      <div class="nav-item" data-panel="today">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Today
+      </div>
+      <div class="nav-item" data-panel="week">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>This Week
+      </div>
+      <div class="nav-sec">Reference</div>
+      <div class="nav-item" data-panel="calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14" stroke-width="3" stroke-linecap="round"/><line x1="12" y1="14" x2="12" y2="14" stroke-width="3" stroke-linecap="round"/><line x1="16" y1="14" x2="16" y2="14" stroke-width="3" stroke-linecap="round"/></svg>Full Calendar
+      </div>
+      <div class="nav-item" data-panel="zones">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Power Zones
+      </div>
+      <div class="nav-item" data-panel="nutrition">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>Nutrition
+      </div>
+      <div class="nav-item" data-panel="recovery">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Recovery
+      </div>
+    </nav>
+    <div class="sb-footer">
+      <div class="ftp-card">
+        <div class="ftp-val" id="sbFTP">239<span style="font-size:13px;font-weight:500">W</span></div>
+        <div class="ftp-lbl">Current FTP</div>
+        <div class="ftp-goal">Goal: <span>315W</span> by Dec '26</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- OVERVIEW (post sign-in landing) -->
+    <div class="panel active" id="panel-home">
+      <div class="today-hdr">
+        <div>
+          <div class="today-date" id="homeDateStr">—</div>
+          <div class="today-title">Today</div>
+          <div class="today-phase" id="homeSubline">Loading from Intervals.icu…</div>
+        </div>
+      </div>
+      <p class="home-intro" id="homeIntro">Your vitals and Garmin-synced activities come from Intervals.icu. The training plan below is your Peak Cycling schedule for today.</p>
+      <div class="home-grid">
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Current vitals</span>
+            <span class="badge" style="background:var(--accent-dim);color:var(--accent)">Garmin / Intervals</span>
+          </div>
+          <div class="card-body">
+            <div class="home-vitals-row" id="homeVitals">
+              <div class="home-vital"><div class="hv-val" id="hvFtp">—</div><div class="hv-lbl">FTP</div></div>
+              <div class="home-vital"><div class="hv-val" id="hvVo2">—</div><div class="hv-lbl">VO2max</div></div>
+              <div class="home-vital"><div class="hv-val" id="hvWeight">—</div><div class="hv-lbl">Weight</div></div>
+            </div>
+            <div class="home-err" id="homeVitalsErr" style="display:none"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Scheduled today</span>
+            <span class="badge" id="homePlanBadge" style="background:var(--tst-bg);color:var(--tst)">Plan</span>
+          </div>
+          <div class="card-body" id="homeScheduledBody"></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Completed workout</span>
+            <span class="badge" id="homeDoneBadge" style="background:var(--rst-bg);color:var(--rst)">—</span>
+          </div>
+          <div class="card-body" id="homeCompletedBody"></div>
+        </div>
+      </div>
+      <div class="home-err" id="homeOverviewErr" style="display:none"></div>
+    </div>
+
+    <!-- TODAY PANEL -->
+    <div class="panel" id="panel-today">
+      <div class="today-hdr">
+        <div>
+          <div class="today-date" id="todayDateStr">Monday, May 4, 2026</div>
+          <div class="today-title" id="todayTitle">Loading...</div>
+          <div class="today-phase" id="todayPhaseStr">Phase 0 – Testing &nbsp;·&nbsp; Week 1 of 35</div>
+        </div>
+      </div>
+      <div class="today-grid">
+        <div class="card" id="workoutCard">
+          <div class="card-hdr">
+            <span class="card-title">Today's Workout</span>
+            <span class="badge" id="wZoneBadge" style="background:var(--rst-bg);color:var(--rst)">REST</span>
+          </div>
+          <div class="card-body" id="workoutBody"></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Nutrition Protocol</span>
+            <span class="badge" id="nutDayBadge" style="background:var(--accent-dim);color:var(--accent)">Rest Day</span>
+          </div>
+          <div class="card-body" id="nutritionBody"></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Recovery Protocol</span>
+          </div>
+          <div class="card-body" id="recoveryBody"></div>
+        </div>
+      </div>
+      <div class="sec-title">Year-End Goals</div>
+      <div class="goals-grid">
+        <div class="goal-item"><div class="g-curr">239W</div><div class="g-arrow">→</div><div class="g-target">~315W</div><div class="g-lbl">FTP Target</div></div>
+        <div class="goal-item"><div class="g-curr">3.40</div><div class="g-arrow">→</div><div class="g-target">4.48 W/kg</div><div class="g-lbl">W/kg Ratio</div></div>
+        <div class="goal-item"><div class="g-curr">1,050W</div><div class="g-arrow">→</div><div class="g-target">1,500W</div><div class="g-lbl">Peak Sprint</div></div>
+        <div class="goal-item"><div class="g-curr">56</div><div class="g-arrow">→</div><div class="g-target">60–63</div><div class="g-lbl">VO2max</div></div>
+        <div class="goal-item"><div class="g-curr">~16 mph</div><div class="g-arrow">→</div><div class="g-target">18 mph</div><div class="g-lbl">60mi Avg Speed</div></div>
+        <div class="goal-item"><div class="g-curr">239W</div><div class="g-arrow">→</div><div class="g-target">315W</div><div class="g-lbl">Final FTP Goal</div></div>
+      </div>
+    </div>
+
+    <!-- WEEK PANEL -->
+    <div class="panel" id="panel-week">
+      <div class="week-hdr">
+        <div>
+          <div class="week-title" id="weekPanelTitle">Week 1 — Phase 0: Testing</div>
+          <div class="week-meta" id="weekPanelDates">May 4 – May 10, 2026</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="week-tss">TSS: <b id="weekTSS">~350</b></span>
+          <div class="wnav">
+            <button class="wnav-btn" id="prevWkBtn">&#8592;</button>
+            <span id="wnavLbl" style="font-size:11px;color:var(--muted)">1/35</span>
+            <button class="wnav-btn" id="nextWkBtn">&#8594;</button>
+          </div>
+        </div>
+      </div>
+      <div class="wdays" id="wdaysGrid"></div>
+    </div>
+
+    <!-- CALENDAR PANEL -->
+    <div class="panel" id="panel-calendar">
+      <div class="sec-title">Full Training Calendar — May 4 to Dec 28, 2026</div>
+      <div class="cal-ctrl">
+        <div class="cal-filter" id="calFilter">
+          <button class="cal-pb active" data-phase="all">All</button>
+          <button class="cal-pb" data-phase="0">Testing</button>
+          <button class="cal-pb" data-phase="1">SS Base</button>
+          <button class="cal-pb" data-phase="2">Polar Build</button>
+          <button class="cal-pb" data-phase="3">Peak Power</button>
+          <button class="cal-pb" data-phase="4">Sprint Peak</button>
+          <button class="cal-pb" data-phase="F">Final Test</button>
+        </div>
+        <input class="cal-search" type="text" id="calSearch" placeholder="Search…">
+      </div>
+      <div class="cal-wrap">
+        <table class="cal-tbl">
+          <thead><tr>
+            <th style="min-width:36px">Wk</th>
+            <th style="min-width:90px">Phase</th>
+            <th style="min-width:110px">Mon</th>
+            <th style="min-width:110px">Tue</th>
+            <th style="min-width:110px">Wed</th>
+            <th style="min-width:110px">Thu</th>
+            <th style="min-width:110px">Fri</th>
+            <th style="min-width:110px">Sat</th>
+            <th style="min-width:110px">Sun</th>
+            <th style="min-width:50px;text-align:right">TSS</th>
+          </tr></thead>
+          <tbody id="calBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ZONES PANEL -->
+    <div class="panel" id="panel-zones">
+      <div class="zones-title">Power Training Zones</div>
+      <div class="zones-sub">5-Zone Coggan Model &nbsp;·&nbsp; FTP = <span id="zonesFTP">239W</span> &nbsp;·&nbsp; Goal: 315W by Dec 2026</div>
+      <div class="zones-2col">
+        <div class="zone-bars-card" id="zoneBarsCard"></div>
+        <div class="zone-detail-card">
+          <div class="zd-row"><div class="zdot" style="background:var(--z1)"></div><div><div class="zd-title c-z1">Z1 — Recovery</div><div class="zd-desc">0–45 min. Cool-downs, flush rides. Conversational. &lt;68% HRmax.</div></div></div>
+          <div class="zd-row"><div class="zdot" style="background:var(--z2)"></div><div><div class="zd-title c-z2">Z2 — Endurance</div><div class="zd-desc">60 min–5+ hrs. Aerobic base, fat adaptation. Easy. 68–79% HRmax.</div></div></div>
+          <div class="zd-row"><div class="zdot" style="background:var(--z3)"></div><div><div class="zd-title c-ss">Z3 — Sweet Spot / Tempo</div><div class="zd-desc">20–60 min blocks. Pyramidal base. Comfortably hard. 80–87% HRmax.</div></div></div>
+          <div class="zd-row"><div class="zdot" style="background:var(--z4)"></div><div><div class="zd-title c-thr">Z4 — Threshold</div><div class="zd-desc">10–30 min blocks. FTP development. Hard. 88–93% HRmax.</div></div></div>
+          <div class="zd-row"><div class="zdot" style="background:var(--z5)"></div><div><div class="zd-title c-vo2">Z5 — VO2max / Anaerobic</div><div class="zd-desc">2–8 min reps. VO2max raises. Very hard. 93–100% HRmax.</div></div></div>
+          <div class="zd-row"><div class="zdot" style="background:var(--spr)"></div><div><div class="zd-title c-spr">Sprint / Neuromuscular</div><div class="zd-desc">5–15s max efforts, 200%+ FTP. Full recovery between reps.</div></div></div>
+        </div>
+      </div>
+      <div class="sec-title">Phase FTP Progression Targets</div>
+      <div class="phase-prog-grid">
+        <div class="goal-item"><div class="g-curr" style="font-size:15px">239W</div><div class="g-lbl">Baseline (May)</div></div>
+        <div class="goal-item"><div class="g-curr" style="font-size:15px;color:var(--z2)">~255W</div><div class="g-lbl">Phase 1 End</div></div>
+        <div class="goal-item"><div class="g-curr" style="font-size:15px;color:var(--z3)">~275W</div><div class="g-lbl">Phase 2 End</div></div>
+        <div class="goal-item"><div class="g-curr" style="font-size:15px;color:var(--z4)">~295W</div><div class="g-lbl">Phase 3 End</div></div>
+        <div class="goal-item"><div class="g-curr" style="font-size:15px;color:var(--z5)">~315W</div><div class="g-lbl">Phase 4 End</div></div>
+        <div class="goal-item"><div class="g-curr" style="font-size:15px;color:var(--accent)">315W ★</div><div class="g-lbl">Final Goal</div></div>
+      </div>
+    </div>
+
+    <!-- NUTRITION PANEL -->
+    <div class="panel" id="panel-nutrition">
+      <div class="sec-title">Nutrition by Day Type</div>
+      <div class="nut-tabs" id="nutTabs">
+        <button class="nt active" data-nut="rest">Rest Day</button>
+        <button class="nt" data-nut="z2only">Z2 Only</button>
+        <button class="nt" data-nut="z2lift">Z2 + Lift</button>
+        <button class="nt" data-nut="vo2">VO2 / Sprint</button>
+        <button class="nt" data-nut="longride">Long Ride (4+ hrs)</button>
+        <button class="nt" data-nut="test">Testing Day</button>
+      </div>
+      <div id="nutArea"></div>
+      <div class="sec-title" style="margin-top:20px">On-Bike Fueling</div>
+      <div class="cal-wrap" style="margin-bottom:18px">
+        <table class="ob-tbl"><thead><tr><th>Ride Duration</th><th>Carbs/hr</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>&lt;60 min Z2</td><td style="color:var(--z2);font-weight:700">0–30g</td><td style="color:var(--muted)">Optional gel or nothing</td></tr>
+          <tr><td>60–90 min Z2</td><td style="color:var(--z2);font-weight:700">30–45g</td><td style="color:var(--muted)">1 gel (25g) + banana or rice cake</td></tr>
+          <tr><td>90+ min any</td><td style="color:var(--z3);font-weight:700">60–80g</td><td style="color:var(--muted)">2 gels OR 1 sports drink + chews</td></tr>
+          <tr><td>3+ hrs / Long Ride</td><td style="color:var(--z4);font-weight:700">60–90g</td><td style="color:var(--muted)">Hourly: gel + rice ball OR chews + banana</td></tr>
+          <tr><td>4+ hrs Sprint/VO2</td><td style="color:var(--z5);font-weight:700">80–100g</td><td style="color:var(--muted)">2:1 glucose:fructose. Gut training required.</td></tr>
+        </tbody></table>
+      </div>
+      <div class="sec-title">Supplementation Protocol</div>
+      <div class="supp-grid">
+        <div class="supp-item"><div class="sn">Creatine Monohydrate</div><div class="sd">5g/day maintenance (20g/day loading × 5 days)</div><div class="st">Loading: Oct 12–16. Maintenance: Oct 17 onward.</div></div>
+        <div class="supp-item"><div class="sn">Caffeine</div><div class="sd">3–5 mg/kg (210–352mg)</div><div class="st">60min before VO2 intervals, testing days</div></div>
+        <div class="supp-item"><div class="sn">Beta-Alanine</div><div class="sd">3.2–6.4g/day</div><div class="st">Split into 2 doses (tingling = normal)</div></div>
+        <div class="supp-item"><div class="sn">Electrolytes (Na/K/Mg)</div><div class="sd">~500–1,000mg Na/hr in heat</div><div class="st">During all rides 60min+</div></div>
+        <div class="supp-item"><div class="sn">Protein Powder</div><div class="sd">30–40g post-session</div><div class="st">Within 45–60min after hard rides &amp; lifts</div></div>
+        <div class="supp-item"><div class="sn">Vitamin D3 + K2</div><div class="sd">2,000–4,000 IU D3 + 100mcg K2</div><div class="st">Daily with fat-containing meal</div></div>
+        <div class="supp-item"><div class="sn">Omega-3 (EPA/DHA)</div><div class="sd">2–4g/day</div><div class="st">With meals</div></div>
+        <div class="supp-item"><div class="sn">Magnesium Glycinate</div><div class="sd">200–400mg</div><div class="st">Before bed</div></div>
+      </div>
+    </div>
+
+    <!-- RECOVERY PANEL -->
+    <div class="panel" id="panel-recovery">
+      <div class="sec-title">Post-Ride Stretching (15–20 min · Priority Order)</div>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:14px">Minimum 3–4 days/week post-ride. Optimal: daily. <b style="color:var(--accent)">Hip flexors = #1 priority.</b></p>
+      <div class="rec-2col">
+        <div>
+          <div class="rec-sec-title">Lower Body Priority</div>
+          <div class="sfi"><div class="sfi-hdr"><span class="sfi-name">Kneeling Hip Flexor Lunge</span><span class="sfi-pri">★★★★★</span></div><div class="sfi-target">Hip flexors (psoas, iliacus, rectus femoris)</div><div class="sfi-dur">45–60s/side · 2 sets · Post-ride</div><div class="sfi-note">Rear knee on ground, front foot forward. TUCK tailbone under. Arm overhead, lean away from stretch.</div></div>
+          <div class="sfi"><div class="sfi-hdr"><span class="sfi-name">Quad Stretch (Standing)</span><span class="sfi-pri">★★★★★</span></div><div class="sfi-target">Quadriceps, rectus femoris</div><div class="sfi-dur">30–45s/side · 2 sets · Post-ride</div><div class="sfi-note">Pull heel to glute. Squeeze glute of stretched leg. Add slight forward lean for deeper stretch.</div></div>
+          <div class="sfi"><div class="sfi-hdr"><span class="sfi-name">Hamstring Stretch (Supine)</span><span class="sfi-pri">★★★★★</span></div><div class="sfi-target">Hamstrings, proximal calf</div><div class="sfi-dur">45–60s/side · 2 sets · Post-ride</div><div class="sfi-note">Lie on back. Pull opposite leg toward chest. Keep leg as straight as possible.</div></div>
+          <div class="sfi"><div class="sfi-hdr"><span class="sfi-name">Pigeon Pose / Figure-4</span><span class="sfi-pri">★★★★☆</span></div><div class="sfi-target">Glutes, piriformis, hip external rotators</div><div class="sfi-dur">60–90s/side · 1–2 sets · Post-ride/evening</div><div class="sfi-note">Front leg at 90°, back leg extended. Fold forward for deeper stretch.</div></div>
+          <div class="sfi"><div class="sfi-hdr"><span class="sfi-name">IT Band Foam Roll + Stretch</span><span class="sfi-pri">★★★★☆</span></div><div class="sfi-target">IT band, lateral quad, TFL</div><div class="sfi-dur">60–90s/side roll · Post-ride</div><div class="sfi-note">Foam roll lateral thigh slowly. Cross-leg standing stretch: lean to opposite side.</div></div>
+        </div>
+        <div>
+          <div class="rec-sec-title">Upper Body &amp; Spine</div>
+          <div class="sfi"><div class="sfi-hdr"><span class="sfi-name">Thoracic Extension Over Roller</span><span class="sfi-pri">★★★★☆</span></div><div class="sfi-target">Thoracic spine, chest, pec minor</div><div class="sfi-dur">60–90s at 3–4 levels · Post-ride/morning</div><div class="sfi-note">Roller perpendicular across mid-back. Arms overhead. Let gravity extend thoracic spine.</div></div>
+          <div class="sfi"><div class="sfi-hdr"><span class="sfi-name">Doorway Chest Stretch</span><span class="sfi-pri">★★★★☆</span></div><div class="sfi-target">Pectorals, anterior deltoid</div><div class="sfi-dur">30–45s/side · 2 sets · Any time</div><div class="sfi-note">Arm at 90°, press elbow into doorway, rotate body away.</div></div>
+          <div class="sfi"><div class="sfi-hdr"><span class="sfi-name">Calf Stretch (Gastroc + Soleus)</span><span class="sfi-pri">★★★☆☆</span></div><div class="sfi-target">Gastrocnemius, soleus, achilles</div><div class="sfi-dur">45–60s/side each position · Post-ride</div><div class="sfi-note">Straight-leg wall stretch (gastroc) + bent-knee wall stretch (soleus). Both needed.</div></div>
+          <div class="sfi"><div class="sfi-hdr"><span class="sfi-name">Child's Pose with Side Reach</span><span class="sfi-pri">★★★☆☆</span></div><div class="sfi-target">Lats, thoracic spine, hip flexors</div><div class="sfi-dur">30–45s each side · 2 sets · Any time</div><div class="sfi-note">On knees, reach arms forward. Walk hands right/left for lat stretch on each side.</div></div>
+          <div class="rec-sec-title" style="margin-top:14px">Pre-Ride Activation (5–10 min)</div>
+          <div class="sfi"><div class="sfi-hdr"><span class="sfi-name">Glute Bridges</span><span class="sfi-pri" style="color:var(--z3)">Essential</span></div><div class="sfi-target">Glutes, core activation</div><div class="sfi-dur">2×10 reps · Pre-ride</div><div class="sfi-note">Activates glutes before riding. Reduces knee tracking issues and lower back strain.</div></div>
+          <div class="sfi"><div class="sfi-hdr"><span class="sfi-name">Leg Swings (Forward + Lateral)</span><span class="sfi-pri" style="color:var(--z3)">Essential</span></div><div class="sfi-target">Hip flexors, glutes, adductors</div><div class="sfi-dur">15 swings each direction per leg · Pre-ride</div><div class="sfi-note">Dynamic warm-up. Increases hip ROM before high-power efforts.</div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+
+<script>
+// =================== AUTH + INTEGRATIONS ===================
+let supabaseClient = null;
+let allowedEmail = '';
+let authReady = false;
+
+async function loadPublicConfig() {
+  const response = await fetch('/api/config');
+  if (!response.ok) {
+    throw new Error('Could not load app configuration.');
+  }
+  return response.json();
+}
+
+function setAuthMessage(msg, isError = false) {
+  const el = document.getElementById('authMsg');
+  el.style.color = isError ? 'var(--z5)' : 'var(--muted)';
+  el.textContent = msg;
+}
+
+function setSyncStatus(msg, isError = false) {
+  const el = document.getElementById('syncStatus');
+  el.style.color = isError ? 'var(--z5)' : 'var(--muted)';
+  el.textContent = msg;
+}
+
+function showDashboard(visible) {
+  document.getElementById('authOverlay').style.display = visible ? 'none' : 'flex';
+  const shell = document.getElementById('appShell');
+  if (shell) {
+    if (visible) shell.classList.remove('is-hidden');
+    else shell.classList.add('is-hidden');
+  }
+}
+
+function getLocalISODate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatDurationSec(sec) {
+  if (sec == null || Number.isNaN(sec)) return '—';
+  const m = Math.floor(sec / 60);
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  if (h > 0) return `${h}h ${mm}m`;
+  return `${m} min`;
+}
+
+function formatDistanceM(meters) {
+  if (meters == null || Number.isNaN(meters)) return '—';
+  return `${(meters / 1000).toFixed(1)} km`;
+}
+
+const HOME_CYCLING_TYPES = new Set(['Ride', 'VirtualRide', 'EBikeRide', 'MountainBikeRide', 'GravelRide', 'Cyclocross', 'Race', 'Handcycle', 'Velomobile', 'BMX']);
+
+function isHomeCyclingType(type) {
+  return HOME_CYCLING_TYPES.has((type || '').toString());
+}
+
+function meaningfulCompletedWorkout(primary) {
+  if (!primary) return false;
+  if (isHomeCyclingType(primary.type)) {
+    return (primary.movingTimeSec || 0) >= 600 || (primary.distanceM || 0) >= 5000;
+  }
+  return (primary.movingTimeSec || 0) >= 900;
+}
+
+let intervalsFtpOverride = null;
+
+function applyVitalsToChrome(vitals) {
+  const ftp = vitals?.ftp;
+  const vo2 = vitals?.vo2max;
+  const wkg = vitals?.weightKg;
+  intervalsFtpOverride = ftp && ftp > 0 ? Math.round(ftp) : null;
+  document.getElementById('hdrFTP').textContent = ftp ? `${Math.round(ftp)}W` : '—';
+  document.getElementById('hdrVO2').textContent = vo2 ? String(Math.round(vo2 * 10) / 10) : '—';
+  const wkgEl = document.getElementById('hdrWkg');
+  if (ftp && wkg) {
+    wkgEl.textContent = (ftp / wkg).toFixed(2);
+  } else {
+    wkgEl.textContent = '—';
+  }
+  const wPill = document.getElementById('hdrWeightPill');
+  const wVal = document.getElementById('hdrWeight');
+  if (wkg && wkg > 0) {
+    const lbs = wkg * 2.20462;
+    wVal.textContent = `${wkg.toFixed(1)} kg · ${lbs.toFixed(0)} lbs`;
+    wPill.style.display = '';
+  } else {
+    wVal.textContent = '—';
+    wPill.style.display = 'none';
+  }
+  const sb = document.getElementById('sbFTP');
+  if (sb && intervalsFtpOverride) {
+    sb.innerHTML = `${intervalsFtpOverride}<span style="font-size:13px;font-weight:500">W</span>`;
+  }
+}
+
+function renderHomeOverview(apiData) {
+  const errEl = document.getElementById('homeOverviewErr');
+  errEl.style.display = 'none';
+  errEl.textContent = '';
+
+  document.getElementById('homeDateStr').textContent = formatDateFull(today);
+
+  const wk = WEEKS[Math.max(0, Math.min(34, currentWeekIdx))];
+  const planDay = wk ? wk.days[currentDayIdx] : null;
+  if (wk && planDay) {
+    document.getElementById('homeSubline').innerHTML = `${escapeHtml(wk.phase)} · Week ${wk.wk} of 35 · <span style="color:var(--text)">${escapeHtml(planDay.lbl)}</span>`;
+    const zc = Z_CSS[planDay.t] || 'bg-rest c-rest';
+    const zl = Z_LABEL[planDay.t] || planDay.t;
+    const badge = document.getElementById('homePlanBadge');
+    badge.textContent = zl;
+    badge.className = 'badge ' + zc;
+  } else {
+    document.getElementById('homeSubline').textContent = 'Outside training plan window';
+  }
+
+  const v = apiData.vitals || {};
+  document.getElementById('hvFtp').textContent = v.ftp ? `${Math.round(v.ftp)} W` : '—';
+  document.getElementById('hvVo2').textContent = v.vo2max ? `${Math.round(v.vo2max * 10) / 10}` : '—';
+  document.getElementById('hvWeight').textContent = v.weightKg ? `${v.weightKg.toFixed(1)} kg` : '—';
+  const vErr = document.getElementById('homeVitalsErr');
+  if (apiData.fetchErrors?.athlete) {
+    vErr.style.display = '';
+    vErr.textContent = `Could not load athlete profile: ${apiData.fetchErrors.athlete}`;
+  } else {
+    vErr.style.display = 'none';
+  }
+
+  const schedEl = document.getElementById('homeScheduledBody');
+  let schedHtml = '';
+  if (planDay) {
+    schedHtml += `<div class="workout-name" style="margin-bottom:8px">${escapeHtml(planDay.lbl)}</div>`;
+    if (planDay.am) {
+      const bc = planDay.t === 'rest' ? 'var(--rst)' : getZoneColor(planDay.t);
+      schedHtml += `<div class="session-block" style="border-color:${bc};margin-bottom:8px"><div class="sess-time">Plan — morning</div><div class="sess-desc">${escapeHtml(planDay.am)}</div></div>`;
+    }
+    if (planDay.pm && planDay.pm !== '—') {
+      schedHtml += `<div class="session-block" style="border-color:var(--z2);margin-bottom:8px"><div class="sess-time">Plan — afternoon</div><div class="sess-desc">${escapeHtml(planDay.pm)}</div></div>`;
+    }
+    if (planDay.det) {
+      schedHtml += `<div style="font-size:11px;color:var(--muted);line-height:1.5">${escapeHtml(planDay.det).replace(/\n/g, '<br>')}</div>`;
+    }
+  } else {
+    schedHtml = '<p style="font-size:12px;color:var(--muted)">No plan entry for today.</p>';
+  }
+  const evs = apiData.eventsToday || [];
+  if (evs.length) {
+    schedHtml += '<div style="margin-top:12px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Intervals calendar</div><ul class="home-list">';
+    evs.forEach((ev) => {
+      const cat = ev.category ? ` <span style="opacity:0.8">(${escapeHtml(ev.category)})</span>` : '';
+      schedHtml += `<li><b style="color:var(--text)">${escapeHtml(ev.name)}</b>${cat}</li>`;
+    });
+    schedHtml += '</ul>';
+  }
+  schedEl.innerHTML = schedHtml || '<p style="font-size:12px;color:var(--muted)">Nothing scheduled.</p>';
+
+  const primary = apiData.primaryActivity;
+  const doneBadge = document.getElementById('homeDoneBadge');
+  const body = document.getElementById('homeCompletedBody');
+  const isRest = planDay && planDay.t === 'rest';
+  const logged = meaningfulCompletedWorkout(primary);
+
+  if (isRest) {
+    doneBadge.textContent = 'Rest day';
+    doneBadge.className = 'badge home-status rest';
+    if (primary) {
+      body.innerHTML = `<div class="home-status rest" style="margin-bottom:10px">No ride required</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px">You still logged an activity in Intervals.icu today.</p>
+        ${buildActivityStatsHtml(primary)}`;
+    } else {
+      body.innerHTML = `<div class="home-status rest">No ride required</div>
+        <p style="font-size:12px;color:var(--muted);margin-top:10px">No Garmin-synced ride found for today yet.</p>`;
+    }
+    return;
+  }
+
+  if (logged && primary) {
+    doneBadge.textContent = 'Completed';
+    doneBadge.className = 'badge home-status done';
+    body.innerHTML = `<div class="home-status done" style="margin-bottom:10px">Logged in Intervals.icu / Garmin</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px">${escapeHtml(primary.name)}</div>
+      ${buildActivityStatsHtml(primary)}`;
+  } else if (primary) {
+    doneBadge.textContent = 'In progress?';
+    doneBadge.className = 'badge home-status pending';
+    body.innerHTML = `<div class="home-status pending" style="margin-bottom:10px">Short or non-cycling activity only</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px">${escapeHtml(primary.name)}</div>
+      ${buildActivityStatsHtml(primary)}
+      <p style="font-size:11px;color:var(--muted);margin-top:10px">Threshold for “completed” is about 10+ min cycling or a longer non-bike workout.</p>`;
+  } else {
+    doneBadge.textContent = 'Not yet';
+    doneBadge.className = 'badge home-status pending';
+    body.innerHTML = `<div class="home-status pending">No qualifying workout logged for today</div>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px">After your Garmin syncs to Intervals.icu, press Refresh above.</p>`;
+  }
+
+  if (apiData.fetchErrors?.activities) {
+    errEl.style.display = '';
+    errEl.textContent = `Activity feed note: ${apiData.fetchErrors.activities}`;
+  }
+}
+
+function buildActivityStatsHtml(a) {
+  const rows = [
+    ['Type', escapeHtml(a.type || '—')],
+    ['Duration', formatDurationSec(a.movingTimeSec)],
+    ['Distance', formatDistanceM(a.distanceM)],
+    ['Avg power', a.avgPower != null ? `${Math.round(a.avgPower)} W` : '—'],
+    ['NP', a.normalizedPower != null ? `${Math.round(a.normalizedPower)} W` : '—'],
+    ['Load', a.icuTrainingLoad != null ? String(Math.round(a.icuTrainingLoad)) : '—'],
+    ['Calories', a.calories != null ? String(Math.round(a.calories)) : '—']
+  ];
+  return `<div>${rows.map(([k, v]) => `<div class="home-stat-row"><span class="home-stat-k">${k}</span><span class="home-stat-v">${v}</span></div>`).join('')}</div>`;
+}
+
+async function loadDashboardOverview() {
+  if (!supabaseClient) return;
+  const btn = document.getElementById('refreshOverviewBtn');
+  if (btn) btn.disabled = true;
+  setSyncStatus('Loading Intervals.icu…');
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session?.access_token) throw new Error('Not signed in.');
+    const localDate = getLocalISODate(today);
+    const response = await fetch(`/api/dashboard-overview?localDate=${encodeURIComponent(localDate)}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Overview request failed.');
+    applyVitalsToChrome(payload.vitals);
+    renderHomeOverview(payload);
+    renderToday();
+    renderZoneBars();
+    setSyncStatus(`Updated ${new Date().toLocaleTimeString()}`);
+  } catch (error) {
+    setSyncStatus(error.message, true);
+    document.getElementById('homeOverviewErr').style.display = '';
+    document.getElementById('homeOverviewErr').textContent = error.message;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function handleIntervalsSync() {
+  if (!supabaseClient) return;
+  const btn = document.getElementById('syncIntervalsBtn');
+  btn.disabled = true;
+  setSyncStatus('Syncing Intervals.icu data...');
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('You are not signed in.');
+    }
+    const response = await fetch('/api/intervals', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      }
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error || 'Intervals sync failed.');
+    }
+    setSyncStatus(`Synced ${payload.savedCount} activities · refreshing…`);
+    await loadDashboardOverview();
+  } catch (error) {
+    setSyncStatus(error.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function initAuthPortal() {
+  try {
+    const config = await loadPublicConfig();
+    allowedEmail = (config.allowedEmail || '').toLowerCase();
+    if (!config.supabaseUrl || !config.supabaseAnonKey || !allowedEmail) {
+      throw new Error('Missing Supabase configuration.');
+    }
+    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+    authReady = true;
+    setAuthMessage('Enter your credentials to continue.');
+    supabaseClient.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        showDashboard(false);
+        setAuthMessage('Signed out.');
+      }
+    });
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session?.user?.email?.toLowerCase() === allowedEmail) {
+      showDashboard(true);
+      loadDashboardOverview();
+    } else {
+      showDashboard(false);
+    }
+  } catch (error) {
+    setAuthMessage(error.message, true);
+    showDashboard(false);
+  }
+}
+
+document.getElementById('authForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!authReady || !supabaseClient) return;
+  const email = document.getElementById('emailInput').value.trim().toLowerCase();
+  const password = document.getElementById('passwordInput').value;
+  const submitBtn = document.getElementById('authSubmitBtn');
+  if (email !== allowedEmail) {
+    setAuthMessage('This portal only allows your configured account email.', true);
+    return;
+  }
+  submitBtn.disabled = true;
+  setAuthMessage('Signing in...');
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    if (data.user?.email?.toLowerCase() !== allowedEmail) {
+      await supabaseClient.auth.signOut();
+      throw new Error('Unauthorized account.');
+    }
+    setAuthMessage('');
+    showDashboard(true);
+    await loadDashboardOverview();
+  } catch (error) {
+    setAuthMessage(error.message || 'Sign in failed.', true);
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+document.getElementById('syncIntervalsBtn').addEventListener('click', handleIntervalsSync);
+document.getElementById('refreshOverviewBtn').addEventListener('click', loadDashboardOverview);
+document.getElementById('signOutBtn').addEventListener('click', async () => {
+  if (supabaseClient) await supabaseClient.auth.signOut();
+  showDashboard(false);
+});
+
+// =================== DATA ===================
+const PLAN_START = new Date(2026, 4, 4); // May 4 2026
+const DAYS_SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const Z_CSS = {
+  rest:'bg-rest c-rest', z1:'bg-z1 c-z1', z2:'bg-z2 c-z2',
+  ss:'bg-ss c-ss', thr:'bg-thr c-thr', vo2:'bg-vo2 c-vo2',
+  spr:'bg-spr c-spr', tst:'bg-tst c-tst'
+};
+const Z_LABEL = {rest:'REST',z1:'Z1',z2:'Z2',ss:'Sweet Spot',thr:'Threshold',vo2:'VO2max',spr:'SPRINT',tst:'TESTING'};
+const Z_COLOR_VAR = {rest:'--rst',z1:'--z1',z2:'--z2',ss:'--z3',thr:'--z4',vo2:'--z5',spr:'--spr',tst:'--tst'};
+const NUT_MAP = {rest:'rest',z1:'z2only',z2:'z2only',z2long:'longride',ss:'z2lift',thr:'z2lift',vo2:'vo2',spr:'vo2',tst:'test',ana:'vo2'};
+const PHASE_COLORS = {'0':'--tst','1':'--z2','2':'--z3','3':'--z4','4':'--spr','T':'--accent','F':'--accent'};
+
+// WEEKS DATA
+// t = type (determines color), lbl = short label, det = detail text, w = watts, am/pm = sessions
+const WEEKS = [
+{wk:1,phase:'0 – Testing',pCode:'0',tss:350,days:[
+  {t:'rest',lbl:'REST',det:'Full rest. Testing week begins.',w:null,am:null,pm:null},
+  {t:'z1',lbl:'Z1 Flush',det:'60min Z1 flush ride.',w:'<131W',am:'60min Z1 flush',pm:'—'},
+  {t:'tst',lbl:'FTP Ramp Test',det:'AM: FTP RAMP TEST\nRecord 20-min power.',w:'Max effort ramp',am:'FTP RAMP TEST',pm:'—'},
+  {t:'rest',lbl:'REST',det:'Recovery after FTP test.',w:null,am:null,pm:null},
+  {t:'tst',lbl:'Sprint Test + Z1',det:'AM: 10-sec Max Sprint Test\nPM: 60min Z1 recovery',w:'10s MAX + <131W',am:'10-sec Sprint Test',pm:'60min Z1 recovery'},
+  {t:'z1',lbl:'Z1 Easy',det:'60min Z1 easy.',w:'<131W',am:'60min Z1',pm:'—'},
+  {t:'z2',lbl:'60mi Baseline TT',det:'60mi BASELINE TT\n~3.75 hrs Z2 steady',w:'134–179W',am:'60mi BASELINE TT',pm:'~3.75 hrs Z2 steady'},
+]},
+{wk:2,phase:'1 – SS Base',pCode:'1',tss:650,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'ss',lbl:'Z2 + 2×15 SS',det:'AM: 90min Z2 + 2×15min Sweet Spot @84-94% FTP\nPM: LIFT A',w:'SS: 201–225W',am:'90min Z2 + 2×15min SS (84-94%)',pm:'LIFT A (Strength)'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B (Strength)'},
+  {t:'ss',lbl:'Z2 + 3×10 SS',det:'AM: 90min Z2 + 3×10min SS\nPM: 60min Z2',w:'SS: 201–225W',am:'90min Z2 + 3×10min SS',pm:'60min Z2'},
+  {t:'z2',lbl:'60mi Long Ride',det:'60mi Z2 Long Ride\n~16–16.5 mph',w:'134–179W',am:'60mi Z2 Long',pm:'~16–16.5 mph'},
+]},
+{wk:3,phase:'1 – SS Base',pCode:'1',tss:680,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'ss',lbl:'Z2 + 2×20 SS',det:'AM: 90min Z2 + 2×20min SS\nPM: LIFT A',w:'SS: 201–225W',am:'90min Z2 + 2×20min SS',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'ss',lbl:'Z2 + 3×12 SS',det:'AM: 90min Z2 + 3×12min SS\nPM: 60min Z2',w:'SS: 201–225W',am:'90min Z2 + 3×12min SS',pm:'60min Z2'},
+  {t:'z2',lbl:'60mi + 1×20 SS',det:'60mi Z2 + 1×20min SS\n~16.5 mph',w:'134–225W',am:'60mi Z2 + 1×20 SS',pm:'~16.5 mph'},
+]},
+{wk:4,phase:'1 – SS Base',pCode:'1',tss:720,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'ss',lbl:'Z2 + 2×20 SS ↑5W',det:'AM: 90min Z2 + 2×20min SS (↑5W)\nPM: LIFT A',w:'SS: ~206–230W',am:'90min Z2 + 2×20min SS (↑5W)',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'ss',lbl:'LONG RIDE DAY',det:'LONG RIDE DAY\n3.5–4hr Z2 + 2×20 SS',w:'134–225W',am:'3.5–4hr Z2 + 2×20 SS',pm:'Long ride day'},
+  {t:'rest',lbl:'REST',det:'Rest after long ride.',w:null,am:null,pm:null},
+  {t:'ss',lbl:'Z2 + 3×15 SS',det:'AM: 90min Z2 + 3×15min SS\nPM: 60min Z2',w:'SS: 201–225W',am:'90min Z2 + 3×15min SS',pm:'60min Z2'},
+  {t:'z2',lbl:'60mi Long ~17mph',det:'60mi Z2 Long\n~16.5–17 mph',w:'134–179W',am:'60mi Z2 Long',pm:'~16.5–17 mph'},
+]},
+{wk:5,phase:'1 – SS Base',pCode:'1',tss:710,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'ss',lbl:'Z2 + 2×20 SS',det:'AM: 90min Z2 + 2×20min SS\nPM: LIFT A',w:'SS: 201–225W',am:'90min Z2 + 2×20min SS',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'ss',lbl:'Z2 + 3×15 SS',det:'AM: 90min Z2 + 3×15min SS\nPM: 60min Z2',w:'SS: 201–225W',am:'90min Z2 + 3×15min SS',pm:'60min Z2'},
+  {t:'z2',lbl:'60mi Long ~17mph',det:'60mi Z2 Long\n~17 mph',w:'134–179W',am:'60mi Z2 Long',pm:'~17 mph'},
+]},
+{wk:6,phase:'1 – SS Base',pCode:'1',tss:760,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'ss',lbl:'Z2 + 3×15 SS',det:'AM: 90min Z2 + 3×15min SS\nPM: LIFT A',w:'SS: 201–225W',am:'90min Z2 + 3×15min SS',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'ss',lbl:'LONG RIDE DAY',det:'LONG RIDE DAY\n4hr Z2 + 3×15 SS',w:'134–225W',am:'4hr Z2 + 3×15 SS',pm:'Long ride day'},
+  {t:'rest',lbl:'REST',det:'Rest after long ride.',w:null,am:null,pm:null},
+  {t:'ss',lbl:'Z2 + 2×20 SS',det:'AM: 90min Z2 + 2×20 SS\nPM: 60min Z2',w:'SS: 201–225W',am:'90min Z2 + 2×20 SS',pm:'60min Z2'},
+  {t:'z2',lbl:'60mi Long ~17mph',det:'60mi Z2 Long\n~17 mph',w:'134–179W',am:'60mi Z2 Long',pm:'~17 mph'},
+]},
+{wk:7,phase:'1 – SS Base',pCode:'1',tss:500,days:[
+  {t:'rest',lbl:'REST (Test Prep)',det:'Rest — FTP Re-Test prep.',w:null,am:null,pm:null},
+  {t:'tst',lbl:'FTP Ramp Test',det:'AM: FTP RAMP TEST\nRecord new FTP. Update zones.',w:'Max effort ramp',am:'FTP RAMP TEST',pm:'—'},
+  {t:'z1',lbl:'Z1 Recovery',det:'AM: 60min Z1\nPM: —',w:'<131W',am:'60min Z1',pm:'—'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 90min Z2\nPM: LIFT B',w:'134–179W',am:'90min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2 Easy',det:'AM: 60min Z2\nPM: —',w:'134–179W',am:'60min Z2',pm:'—'},
+  {t:'z2',lbl:'Z2 Easy',det:'AM: 75min Z2\nPM: —',w:'134–179W',am:'75min Z2',pm:'—'},
+  {t:'z2',lbl:'60mi Long ~17mph',det:'60mi Z2 Long\n~17 mph',w:'134–179W',am:'60mi Z2 Long',pm:'~17 mph'},
+]},
+{wk:8,phase:'2 – Polar Build',pCode:'2',tss:700,days:[
+  {t:'rest',lbl:'REST',det:'Rest. Polarized Build phase begins.',w:null,am:null,pm:null},
+  {t:'vo2',lbl:'4×4 VO2 @108%',det:'AM: 90min Z2 + 4×4min VO2 @108% FTP (~258W)\nPM: LIFT A',w:'VO2: ~258W (108%)',am:'90min Z2 + 4×4min VO2 @108% FTP',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'Over-Unders 3×10',det:'AM: 90min Z2 + Over-Unders 3×10\nPM: 60min Z2',w:'90/107% FTP',am:'90min Z2 + Over-Unders 3×10',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'60mi + Surges',det:'60mi Z2 + 2-3 surge efforts\n~17 mph',w:'Z2 + surge to Z5',am:'60mi Z2',pm:'2–3 surges, ~17 mph'},
+]},
+{wk:9,phase:'2 – Polar Build',pCode:'2',tss:750,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'vo2',lbl:'4×4 VO2 @110%',det:'AM: 90min Z2 + 4×4min VO2 @110% FTP (~263W)\nPM: LIFT A',w:'VO2: ~263W (110%)',am:'90min Z2 + 4×4min VO2 @110% FTP',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'vo2',lbl:'LONG RIDE + VO2',det:'LONG RIDE DAY\n4hr Z2 + 2×4min VO2',w:'Z2 + VO2 ~263W',am:'4hr Z2 + 2×4min VO2',pm:'Long ride day'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65mi Long ~17mph',det:'65mi Z2 Long\n~17 mph',w:'134–179W',am:'65mi Z2 Long',pm:'~17 mph'},
+]},
+{wk:10,phase:'2 – Polar Build',pCode:'2',tss:780,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'vo2',lbl:'5×4 VO2 @112%',det:'AM: 90min Z2 + 5×4min VO2 @112% FTP (~267W)\nPM: LIFT A',w:'VO2: ~267W (112%)',am:'90min Z2 + 5×4min VO2 @112% FTP',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'2×20 Threshold @95%',det:'AM: 90min Z2 + 2×20min THR @95% FTP (~227W)\nPM: 60min Z2',w:'Threshold: ~227W (95%)',am:'90min Z2 + 2×20min THR @95% FTP',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65mi Long ~17.5mph',det:'65mi Z2 Long\n~17–17.5 mph',w:'134–179W',am:'65mi Z2 Long',pm:'~17–17.5 mph'},
+]},
+{wk:11,phase:'2 – Polar Build',pCode:'2',tss:790,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'vo2',lbl:'5×4 VO2 @112%',det:'AM: 90min Z2 + 5×4min VO2 @112% FTP\nPM: LIFT A',w:'VO2: ~267W (112%)',am:'90min Z2 + 5×4min VO2 @112% FTP',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'Over-Unders 3×12',det:'AM: 90min Z2 + Over-Unders 3×12 @90/107% FTP\nPM: 60min Z2',w:'90/107% FTP',am:'90min Z2 + Over-Unders 3×12',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65mi Long ~17.5mph',det:'65mi Z2 Long\n~17.5 mph',w:'134–179W',am:'65mi Z2 Long',pm:'~17.5 mph'},
+]},
+{wk:12,phase:'2 – Polar Build',pCode:'2',tss:600,days:[
+  {t:'rest',lbl:'REST (Recovery Wk)',det:'Recovery week — reduced volume.',w:null,am:null,pm:null},
+  {t:'vo2',lbl:'75min + 3×4 VO2',det:'AM: 75min Z2 + 3×4min VO2\nPM: LIFT A',w:'VO2: ~267W',am:'75min Z2 + 3×4min VO2',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Reduced',det:'AM: 75min Z2 / PM: 60min Z2',w:'134–179W',am:'75min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 Reduced',det:'AM: 75min Z2 / PM: 60min Z2',w:'134–179W',am:'75min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2 Easy',det:'AM: 75min Z2 / PM: —',w:'134–179W',am:'75min Z2',pm:'—'},
+  {t:'z2',lbl:'60mi Long ~17.5mph',det:'60mi Z2 Long\n~17.5 mph',w:'134–179W',am:'60mi Z2 Long',pm:'~17.5 mph'},
+]},
+{wk:13,phase:'2 – Polar Build',pCode:'2',tss:820,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'vo2',lbl:'7×4 VO2 @118%',det:'AM: 90min Z2 + 7×4min VO2 @118% FTP (~282W)\nPM: LIFT A',w:'VO2: ~282W (118%)',am:'90min Z2 + 7×4min VO2 @118% FTP',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'vo2',lbl:'LONG RIDE + VO2',det:'LONG RIDE DAY\n4.5hr Z2 + 4×4 VO2',w:'Z2 + VO2 ~282W',am:'4.5hr Z2 + 4×4 VO2',pm:'Long ride day'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65mi Long ~17.5mph',det:'65mi Z2 Long\n~17.5 mph',w:'134–179W',am:'65mi Z2 Long',pm:'~17.5 mph'},
+]},
+{wk:14,phase:'2 – Polar Build',pCode:'2',tss:850,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'thr',lbl:'2×25 Threshold @97-100%',det:'AM: 90min Z2 + 2×25min THR @97–100% FTP (~232–239W)\nPM: LIFT A',w:'Threshold: 232–239W',am:'90min Z2 + 2×25min THR @97–100% FTP',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'vo2',lbl:'6×4 VO2 @115%',det:'AM: 90min Z2 + 6×4min VO2 @115% FTP (~275W)\nPM: 60min Z2',w:'VO2: ~275W (115%)',am:'90min Z2 + 6×4min VO2 @115% FTP',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65–70mi Long ~18mph',det:'65–70mi Z2 Long\n~17.5–18 mph',w:'134–179W',am:'65–70mi Z2 Long',pm:'~17.5–18 mph'},
+]},
+{wk:15,phase:'2 – Polar Build',pCode:'2',tss:480,days:[
+  {t:'rest',lbl:'REST (Test Prep)',det:'Rest — FTP Re-Test prep.',w:null,am:null,pm:null},
+  {t:'tst',lbl:'FTP Ramp Test',det:'AM: FTP RAMP TEST\nUpdate zones. Expected ~275W.',w:'Max effort ramp',am:'FTP RAMP TEST (update zones)',pm:'—'},
+  {t:'z1',lbl:'Z1 Recovery',det:'AM: 60min Z1 / PM: —',w:'<131W',am:'60min Z1',pm:'—'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 75min Z2\nPM: LIFT B',w:'134–179W',am:'75min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2 Easy',det:'AM: 60min Z2 / PM: —',w:'134–179W',am:'60min Z2',pm:'—'},
+  {t:'z2',lbl:'Z2 Easy',det:'AM: 75min Z2 / PM: —',w:'134–179W',am:'75min Z2',pm:'—'},
+  {t:'z2',lbl:'60mi Long ~17.5mph',det:'60mi Z2 Long\n~17.5 mph',w:'134–179W',am:'60mi Z2 Long',pm:'~17.5 mph'},
+]},
+{wk:16,phase:'3 – Peak Power',pCode:'3',tss:720,days:[
+  {t:'rest',lbl:'REST',det:'Rest. Peak Power phase begins.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'8×10s MAX SPRINT',det:'AM: 60min Z2 + 8×10s MAX SPRINT (200%+ FTP → ~478W+)\nPM: LIFT A (3–5RM Deadlift)',w:'Sprint: 478W+ (200%+)',am:'60min Z2 + 8×10s MAX SPRINT',pm:'LIFT A (3-5RM DL)'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'2×20→25 THR @101-103%',det:'AM: 90min Z2 + 2×20→2×25min THR @101–103% FTP\nPM: 60min Z2',w:'Threshold: 241–246W',am:'90min Z2 + 2×20→2×25 THR @101-103%',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B (Power)',w:'134–179W',am:'60min Z2',pm:'LIFT B (Power)'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'spr',lbl:'60mi + 4 Mid-Ride Sprints',det:'60mi Z2 + 4 mid-ride max sprints\n~17.5 mph',w:'Z2 + sprint surges',am:'60mi Z2',pm:'4 mid-ride max sprints'},
+]},
+{wk:17,phase:'3 – Peak Power',pCode:'3',tss:750,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'10×10s MAX SPRINT',det:'AM: 60min Z2 + 10×10s MAX SPRINT\nPM: LIFT A (DL 3–5RM)',w:'Sprint: 478W+ (200%+)',am:'60min Z2 + 10×10s MAX SPRINT',pm:'LIFT A (DL 3-5RM)'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'spr',lbl:'LONG RIDE + Sprints',det:'LONG RIDE DAY\n4hr Z2 + sprint surges + max climb efforts',w:'Z2 + sprint surges',am:'4hr Z2 + sprint surges',pm:'max climb efforts'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65mi Long ~18mph',det:'65mi Z2 Long\n~17.5–18 mph',w:'134–179W',am:'65mi Z2 Long',pm:'~17.5–18 mph'},
+]},
+{wk:18,phase:'3 – Peak Power',pCode:'3',tss:760,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'Sprint + VO2 Maint.',det:'AM: 60min Z2 + 10×10s MAX SPRINT + 4×4 VO2 maint.\nPM: LIFT A',w:'Sprint 478W+ + VO2 ~290W',am:'60min Z2 + 10×10s SPRINT + 4×4 VO2 maint.',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'2×25 THR @102-104%',det:'AM: 90min Z2 + 2×25min THR @102–104% FTP\nPM: 60min Z2',w:'Threshold: 243–249W',am:'90min Z2 + 2×25 THR @102-104%',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65mi Long ~18mph',det:'65mi Z2 Long\n~18 mph',w:'134–179W',am:'65mi Z2 Long',pm:'~18 mph target'},
+]},
+{wk:19,phase:'3 – Peak Power',pCode:'3',tss:770,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'12×10s MAX SPRINT',det:'AM: 60min Z2 + 12×10s MAX SPRINT\nPM: LIFT A (↑ load DL)',w:'Sprint: 478W+ (200%+)',am:'60min Z2 + 12×10s MAX SPRINT',pm:'LIFT A (↑ load DL)'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'Over-Unders 3×12',det:'AM: 90min Z2 + Over-Unders 3×12\nPM: 60min Z2',w:'90/107% FTP',am:'90min Z2 + Over-Unders 3×12',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65mi Long ~18mph',det:'65mi Z2 Long\n~18 mph',w:'134–179W',am:'65mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:20,phase:'3 – Peak Power',pCode:'3',tss:580,days:[
+  {t:'rest',lbl:'REST (Recovery Wk)',det:'Recovery week — reduced volume.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'6×10s Sprint (deload)',det:'AM: 75min Z2 + 6×10s MAX SPRINT\nPM: LIFT A (deload 70%)',w:'Sprint: 478W+ reduced vol.',am:'75min Z2 + 6×10s MAX SPRINT',pm:'LIFT A (deload 70%)'},
+  {t:'z2',lbl:'Z2 Reduced',det:'AM: 75min Z2 / PM: 60min Z2',w:'134–179W',am:'75min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 Reduced',det:'AM: 75min Z2 / PM: 60min Z2',w:'134–179W',am:'75min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B (deload)',det:'AM: 60min Z2\nPM: LIFT B (deload)',w:'134–179W',am:'60min Z2',pm:'LIFT B (deload)'},
+  {t:'z2',lbl:'Z2 Easy',det:'AM: 75min Z2 / PM: —',w:'134–179W',am:'75min Z2',pm:'—'},
+  {t:'z2',lbl:'60mi Long ~17.5mph',det:'60mi Z2 Long\n~17.5 mph',w:'134–179W',am:'60mi Z2 Long',pm:'~17.5 mph'},
+]},
+{wk:21,phase:'3 – Peak Power',pCode:'3',tss:780,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'12×10s MAX SPRINT',det:'AM: 60min Z2 + 12×10s MAX SPRINT\nPM: LIFT A (back to full)',w:'Sprint: 478W+ (200%+)',am:'60min Z2 + 12×10s MAX SPRINT',pm:'LIFT A (back to full)'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'spr',lbl:'LONG RIDE + Sprints',det:'LONG RIDE DAY\n4.5hr Z2 + sprint surges',w:'Z2 + sprint surges',am:'4.5hr Z2 + sprint surges',pm:'Long ride day'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65–70mi Long ~18mph',det:'65–70mi Z2 Long\n~18 mph',w:'134–179W',am:'65–70mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:22,phase:'3 – Peak Power',pCode:'3',tss:790,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'5×30s Anaerobic @200%',det:'AM: 60min Z2 + 5×30s ANAEROBIC @200% FTP (~478W)\nPM: LIFT A (heavy DL PR attempt)',w:'Anaerobic: ~478W (200%)',am:'60min Z2 + 5×30s ANAEROBIC @200% FTP',pm:'LIFT A (heavy DL PR)'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'2×25 THR @104-106%',det:'AM: 90min Z2 + 2×25min THR @104–106% FTP\nPM: 60min Z2',w:'Threshold: 249–253W',am:'90min Z2 + 2×25 THR @104-106%',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65mi Long ~18mph',det:'65mi Z2 Long\n~18 mph',w:'134–179W',am:'65mi Z2 Long',pm:'~18 mph target'},
+]},
+{wk:23,phase:'3→4 Transition',pCode:'T',tss:500,days:[
+  {t:'rest',lbl:'REST (Sprint Test Prep)',det:'Rest — Sprint Test prep.',w:null,am:null,pm:null},
+  {t:'tst',lbl:'Sprint Test + FTP',det:'AM: 10s SPRINT TEST + FTP assessment ride\nRecord peak sprint watts',w:'10s MAX sprint',am:'10s SPRINT TEST + FTP assessment ride',pm:'—'},
+  {t:'z1',lbl:'Z1 Recovery',det:'AM: 60min Z1 / PM: —',w:'<131W',am:'60min Z1',pm:'—'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 75min Z2\nPM: LIFT B',w:'134–179W',am:'75min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2 Easy',det:'AM: 60min Z2 / PM: —',w:'134–179W',am:'60min Z2',pm:'—'},
+  {t:'z2',lbl:'Z2 Easy',det:'AM: 75min Z2 / PM: —',w:'134–179W',am:'75min Z2',pm:'—'},
+  {t:'z2',lbl:'60mi Long ~18mph',det:'60mi Z2 Long\n~18 mph',w:'134–179W',am:'60mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:24,phase:'4 – Sprint Peak',pCode:'4',tss:740,days:[
+  {t:'rest',lbl:'REST',det:'Rest. Sprint Peak phase begins. Start creatine loading.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'6×15s Sprint (full rest)',det:'AM: 60min Z2 + 6×15s MAX SPRINT (full effort, long rest)\nPM: LIFT A',w:'Sprint: 1,500W target',am:'60min Z2 + 6×15s MAX SPRINT (long rest)',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'2×25 THR @102-104%',det:'AM: 90min Z2 + 2×25min THR @102–104% FTP\nPM: 60min Z2',w:'Threshold: 243–249W',am:'90min Z2 + 2×25 THR @102-104%',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65–70mi Long ~18mph',det:'65–70mi Z2 Long\n~18 mph',w:'134–179W',am:'65–70mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:25,phase:'4 – Sprint Peak',pCode:'4',tss:760,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'8×15s MAX SPRINT',det:'AM: 60min Z2 + 8×15s MAX SPRINT\nPM: LIFT A (DL 3RM)',w:'Sprint: 1,500W target',am:'60min Z2 + 8×15s MAX SPRINT',pm:'LIFT A (DL 3RM)'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'spr',lbl:'LONG RIDE + Sprints',det:'LONG RIDE DAY\n4.5hr Z2 + sprint surges + 2×10 THR blocks',w:'Z2 + sprint surges',am:'4.5hr Z2 + sprint surges',pm:'2×10 THR blocks'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65–70mi Long ~18mph',det:'65–70mi Z2 Long\n~18 mph',w:'134–179W',am:'65–70mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:26,phase:'4 – Sprint Peak',pCode:'4',tss:770,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'Sprint + VO2 Maint.',det:'AM: 60min Z2 + 8×15s MAX SPRINT + 4×4 VO2 maint.\nPM: LIFT A',w:'Sprint + VO2 maint.',am:'60min Z2 + 8×15s SPRINT + 4×4 VO2',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'Over-Unders 3×12',det:'AM: 90min Z2 + Over-Unders 3×12\nPM: 60min Z2',w:'90/107% FTP',am:'90min Z2 + Over-Unders 3×12',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'65–70mi Long ~18mph',det:'65–70mi Z2 Long\n~18 mph',w:'134–179W',am:'65–70mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:27,phase:'4 – Sprint Peak',pCode:'4',tss:780,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'10×15s MAX SPRINT',det:'AM: 60min Z2 + 10×15s MAX SPRINT\nPM: LIFT A (DL heavy)',w:'Sprint: 1,500W target',am:'60min Z2 + 10×15s MAX SPRINT',pm:'LIFT A (DL heavy)'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'2×25 THR @104-106%',det:'AM: 90min Z2 + 2×25min THR @104–106% FTP\nPM: 60min Z2',w:'Threshold: 249–253W',am:'90min Z2 + 2×25 THR @104-106%',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'70mi Long ~18mph',det:'70mi Z2 Long\n~18 mph',w:'134–179W',am:'70mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:28,phase:'4 – Sprint Peak',pCode:'4',tss:580,days:[
+  {t:'rest',lbl:'REST (Recovery Wk)',det:'Recovery week — reduced volume.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'4×15s Sprint (deload)',det:'AM: 75min Z2 + 4×15s MAX SPRINT\nPM: LIFT A (deload 70%)',w:'Sprint: 1,500W target (reduced)',am:'75min Z2 + 4×15s MAX SPRINT',pm:'LIFT A (deload 70%)'},
+  {t:'z2',lbl:'Z2 Reduced',det:'AM: 75min Z2 / PM: 60min Z2',w:'134–179W',am:'75min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 Reduced',det:'AM: 75min Z2 / PM: 60min Z2',w:'134–179W',am:'75min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B (deload)',det:'AM: 60min Z2\nPM: LIFT B (deload)',w:'134–179W',am:'60min Z2',pm:'LIFT B (deload)'},
+  {t:'z2',lbl:'Z2 Easy',det:'AM: 75min Z2 / PM: —',w:'134–179W',am:'75min Z2',pm:'—'},
+  {t:'z2',lbl:'60mi Long ~18mph',det:'60mi Z2 Long\n~18 mph',w:'134–179W',am:'60mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:29,phase:'4 – Sprint Peak',pCode:'4',tss:800,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'10×15s MAX SPRINT',det:'AM: 60min Z2 + 10×15s MAX SPRINT\nPM: LIFT A',w:'Sprint: 1,500W target',am:'60min Z2 + 10×15s MAX SPRINT',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'spr',lbl:'LONG RIDE + Sprints',det:'LONG RIDE DAY\n5hr Z2 + sprints + threshold blocks',w:'Z2 + sprints + THR blocks',am:'5hr Z2 + sprints',pm:'threshold blocks'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'70mi Long ~18mph',det:'70mi Z2 Long\n~18 mph',w:'134–179W',am:'70mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:30,phase:'4 – Sprint Peak',pCode:'4',tss:810,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'12×15s Sprint + FTP Wk',det:'AM: 60min Z2 + 12×15s MAX SPRINT\n★ FTP ACCUM WEEK: Tue=2×25 THR\nPM: LIFT A (DL 2–3RM peak)',w:'Sprint: 1,500W target',am:'60min Z2 + 12×15s MAX SPRINT',pm:'LIFT A (DL 2-3RM peak)'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'1×45min THR @104% PEAK',det:'AM: 90min Z2 + 1×45min THR @104% FTP\n★ PEAK FTP SESSION\nPM: 60min Z2',w:'Threshold PEAK: ~249W',am:'90min Z2 + 1×45min THR @104% FTP (PEAK)',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'70mi Long ~18mph',det:'70mi Z2 Long\n~18 mph',w:'134–179W',am:'70mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:31,phase:'4 – Sprint Peak',pCode:'4',tss:790,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'10×15s MAX SPRINT',det:'AM: 60min Z2 + 10×15s MAX SPRINT\nPM: LIFT A',w:'Sprint: 1,500W target',am:'60min Z2 + 10×15s MAX SPRINT',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'thr',lbl:'Over-Unders 3×15',det:'AM: 90min Z2 + Over-Unders 3×15\nPM: 60min Z2',w:'90/107% FTP',am:'90min Z2 + Over-Unders 3×15',pm:'60min Z2'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'70mi Long ~18mph',det:'70mi Z2 Long\n~18 mph',w:'134–179W',am:'70mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:32,phase:'4 – Sprint Peak',pCode:'4',tss:780,days:[
+  {t:'rest',lbl:'REST',det:'Rest day.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'8×15s MAX SPRINT',det:'AM: 60min Z2 + 8×15s MAX SPRINT\nPM: LIFT A',w:'Sprint: 1,500W target',am:'60min Z2 + 8×15s MAX SPRINT',pm:'LIFT A'},
+  {t:'z2',lbl:'Z2 Double',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'spr',lbl:'LONG RIDE + Sprints',det:'LONG RIDE DAY\n5hr Z2 + sprint surges',w:'Z2 + sprint surges',am:'5hr Z2 + sprint surges',pm:'Long ride day'},
+  {t:'z2',lbl:'Z2 + Lift B',det:'AM: 60min Z2\nPM: LIFT B',w:'134–179W',am:'60min Z2',pm:'LIFT B'},
+  {t:'z2',lbl:'Z2',det:'AM: 90min Z2 / PM: 60min Z2',w:'134–179W',am:'90min Z2',pm:'60min Z2'},
+  {t:'z2',lbl:'70mi Long ~18mph',det:'70mi Z2 Long\n~18 mph',w:'134–179W',am:'70mi Z2 Long',pm:'~18 mph'},
+]},
+{wk:33,phase:'4 – Sprint Peak',pCode:'4',tss:420,days:[
+  {t:'rest',lbl:'REST (Taper Week)',det:'Taper week — sharp volume drop.',w:null,am:null,pm:null},
+  {t:'spr',lbl:'6×15s Sprint (taper)',det:'AM: 60min Z2 + 6×15s MAX SPRINT\nPM: LIFT A (deload 60%)',w:'Sprint: 1,500W target',am:'60min Z2 + 6×15s MAX SPRINT',pm:'LIFT A (deload 60%)'},
+  {t:'z2',lbl:'Z2 Easy',det:'AM: 60min Z2 / PM: —',w:'134–179W',am:'60min Z2',pm:'—'},
+  {t:'z2',lbl:'Z2 Easy',det:'AM: 60min Z2 / PM: —',w:'134–179W',am:'60min Z2',pm:'—'},
+  {t:'z1',lbl:'Z1 Easy',det:'AM: 60min Z1 / PM: —',w:'<131W',am:'60min Z1',pm:'—'},
+  {t:'z1',lbl:'Z1 Easy',det:'AM: 60min Z1 / PM: —',w:'<131W',am:'60min Z1',pm:'—'},
+  {t:'z1',lbl:'45min Z1 Pre-Test Flush',det:'45min Z1 (pre-test flush)',w:'<131W',am:'45min Z1 (pre-test flush)',pm:'—'},
+]},
+{wk:34,phase:'F – Final Test',pCode:'F',tss:380,days:[
+  {t:'tst',lbl:'RAMP FTP TEST',det:'AM: RAMP FTP TEST\nGoal: 315W',w:'Max effort ramp. Goal: 315W',am:'RAMP FTP TEST',pm:'—'},
+  {t:'tst',lbl:'10s MAX SPRINT TEST',det:'AM: 10s MAX SPRINT TEST\nGoal: 1,500W',w:'10s MAX. Goal: 1,500W',am:'10s MAX SPRINT TEST',pm:'—'},
+  {t:'rest',lbl:'REST',det:'Rest.',w:null,am:null,pm:null},
+  {t:'rest',lbl:'REST',det:'Rest.',w:null,am:null,pm:null},
+  {t:'z1',lbl:'Z1 Easy',det:'AM: 60min Z1 / PM: —',w:'<131W',am:'60min Z1',pm:'—'},
+  {t:'z1',lbl:'Z1 Easy',det:'AM: 60min Z1 / PM: —',w:'<131W',am:'60min Z1',pm:'—'},
+  {t:'tst',lbl:'60mi TIME TRIAL',det:'60mi TIME TRIAL\n~18 mph target — final assessment',w:'Z2 steady + final effort',am:'60mi TIME TRIAL',pm:'~18 mph target (final assessment)'},
+]},
+{wk:35,phase:'F – Final Test',pCode:'F',tss:0,days:[
+  {t:'tst',lbl:'Review & Reflect',det:'Document results. Plan 2027.',w:null,am:'Review & Reflect',pm:'Document results, Plan 2027'},
+  {t:'z1',lbl:'Celebration Ride',det:'Easy 60min Z1 (celebration ride)',w:'<131W',am:'60min Z1 (celebration ride)',pm:'—'},
+  {t:'rest',lbl:'—',det:'',w:null,am:null,pm:null},
+  {t:'rest',lbl:'—',det:'',w:null,am:null,pm:null},
+  {t:'rest',lbl:'—',det:'',w:null,am:null,pm:null},
+  {t:'rest',lbl:'—',det:'',w:null,am:null,pm:null},
+  {t:'rest',lbl:'—',det:'',w:null,am:null,pm:null},
+]},
+];
+
+// NUTRITION DATA
+const NUT_DATA = {
+  rest: {
+    name:'Rest Day / Easy Day',
+    carbs:'281–352g',carbsPkg:'4–5 g/kg',
+    protein:'127–141g',proteinPkg:'1.8–2.0 g/kg',
+    fat:'90–110g',cal:'~2,200–2,500 kcal',
+    timing:'Protein-focused meals. Lower carb but do NOT under-eat — recovery needs fuel.',
+    note:'Relative rest does not mean caloric restriction. Under-fueling impairs adaptation.',
+    color:'--rst'
+  },
+  z2only: {
+    name:'Z2 Only Day (2 hrs)',
+    carbs:'352–422g',carbsPkg:'5–6 g/kg',
+    protein:'113g',proteinPkg:'1.6 g/kg',
+    fat:'80–100g',cal:'~2,500–2,800 kcal',
+    timing:'Spread carbs across day. Big carb meal pre-ride + post-ride refuel.',
+    note:'Moderate carbs. Focus on nutrient-dense whole food sources.',
+    color:'--z2'
+  },
+  z2lift: {
+    name:'Z2 + Lift Day',
+    carbs:'422–492g',carbsPkg:'6–7 g/kg',
+    protein:'127g',proteinPkg:'1.8 g/kg',
+    fat:'80–100g',cal:'~2,700–3,000 kcal',
+    timing:'Post-lift: 40g protein + 60–80g carbs within 45min.',
+    note:'Protein critical for muscle synthesis. Lift days require extra protein timing.',
+    color:'--z3'
+  },
+  vo2: {
+    name:'VO2 / Sprint Day',
+    carbs:'492–562g',carbsPkg:'7–8 g/kg',
+    protein:'127g',proteinPkg:'1.8 g/kg',
+    fat:'60–80g',cal:'~2,900–3,200 kcal',
+    timing:'Pre-session: 80–100g carbs 2–3hrs before. Post: 40g protein + 80g carbs.',
+    note:'High carb day. Glycogen must be topped up before VO2/sprint efforts.',
+    color:'--z5'
+  },
+  longride: {
+    name:'Long Ride Day (4+ hrs)',
+    carbs:'562–703g',carbsPkg:'8–10 g/kg',
+    protein:'113g',proteinPkg:'1.6 g/kg',
+    fat:'70–90g',cal:'~3,200–3,800 kcal',
+    timing:'During ride: 60–80g carbs/hr. Immediate post-ride: 80–100g carbs + 40g protein.',
+    note:'Highest carb day. Add electrolytes every 2 hrs on bike.',
+    color:'--z4'
+  },
+  test: {
+    name:'Testing Day',
+    carbs:'562g',carbsPkg:'8 g/kg',
+    protein:'113g',proteinPkg:'1.6 g/kg',
+    fat:'60–80g',cal:'~2,900 kcal',
+    timing:'Day before: large carb dinner (600–700g total). Test day: 80–100g carbs 2hrs before test.',
+    note:'Treat like race day. Avoid new foods. Sleep 9hrs night before.',
+    color:'--tst'
+  }
+};
+
+// =================== HELPERS ===================
+function getDateForDay(weekIdx, dayIdx) {
+  const d = new Date(PLAN_START);
+  d.setDate(d.getDate() + weekIdx * 7 + dayIdx);
+  return d;
+}
+function formatDate(d) {
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+}
+function formatDateFull(d) {
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  return `${days[d.getDay()]}, ${MONTHS_FULL[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+function getWeekIdx(date) {
+  const d = new Date(date); d.setHours(0,0,0,0);
+  const s = new Date(PLAN_START); s.setHours(0,0,0,0);
+  const diff = Math.round((d - s) / 86400000);
+  return Math.floor(diff / 7);
+}
+function getDayIdx(date) {
+  const d = new Date(date); d.setHours(0,0,0,0);
+  const s = new Date(PLAN_START); s.setHours(0,0,0,0);
+  const diff = Math.round((d - s) / 86400000);
+  return diff % 7;
+}
+function getZoneColor(t) { return `var(${Z_COLOR_VAR[t]||'--muted'})`; }
+function getNutType(t) { return NUT_MAP[t] || 'z2only'; }
+
+// =================== CURRENT STATE ===================
+const today = new Date(); today.setHours(0,0,0,0);
+let currentWeekIdx = Math.max(0, Math.min(34, getWeekIdx(today)));
+let currentDayIdx = getDayIdx(today);
+let viewWeekIdx = currentWeekIdx;
+
+// =================== RENDER ZONE BARS ===================
+function renderZoneBars() {
+  const ftp = intervalsFtpOverride || 239;
+  const zftp = document.getElementById('zonesFTP');
+  if (zftp) zftp.textContent = `${ftp}W`;
+  const zones = [
+    {code:'Z1',name:'Recovery',pct:'<55%',minW:0,maxW:Math.round(ftp*0.55),minP:0,maxP:55,color:'var(--z1)'},
+    {code:'Z2',name:'Endurance',pct:'56–75%',minW:Math.round(ftp*0.56),maxW:Math.round(ftp*0.75),minP:56,maxP:75,color:'var(--z2)'},
+    {code:'Z3',name:'Sweet Spot',pct:'76–94%',minW:Math.round(ftp*0.76),maxW:Math.round(ftp*0.94),minP:76,maxP:94,color:'var(--z3)'},
+    {code:'Z4',name:'Threshold',pct:'95–105%',minW:Math.round(ftp*0.95),maxW:Math.round(ftp*1.05),minP:95,maxP:105,color:'var(--z4)'},
+    {code:'Z5',name:'VO2max',pct:'>106%',minW:Math.round(ftp*1.06),maxW:Math.round(ftp*1.2),minP:106,maxP:120,color:'var(--z5)'},
+  ];
+  const maxBar = 120;
+  const html = zones.map(z => {
+    const barW = Math.round(((z.maxP - z.minP) / maxBar) * 100);
+    const barL = Math.round((z.minP / maxBar) * 100);
+    return `<div class="zone-row">
+      <div class="zname-col"><div class="z-code" style="color:${z.color}">${z.code}</div><div class="z-lbl">${z.name}</div></div>
+      <div class="zbar-wrap">
+        <div class="zbar-fill" style="background:${z.color};width:${barW}%;margin-left:${barL}%">
+          <span class="zbar-txt">${z.pct}</span>
+        </div>
+      </div>
+      <div class="zinfo-col"><div class="zwatts">${z.minW}–${z.maxW}W</div><div class="zhr">${z.minP}–${z.maxP}% FTP</div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('zoneBarsCard').innerHTML = html;
+}
+
+// =================== RENDER TODAY ===================
+function renderToday() {
+  const wk = WEEKS[currentWeekIdx];
+  const day = wk ? wk.days[currentDayIdx] : null;
+  const dateStr = formatDateFull(today);
+  document.getElementById('todayDateStr').textContent = dateStr;
+
+  if (!wk || currentWeekIdx < 0 || currentWeekIdx >= 35) {
+    document.getElementById('todayTitle').textContent = 'Outside Training Plan';
+    document.getElementById('todayPhaseStr').textContent = 'Plan runs May 4 – Dec 28, 2026';
+    document.getElementById('workoutBody').innerHTML = '<p style="color:var(--muted);font-size:12px">Today is outside the training plan period.</p>';
+    return;
+  }
+
+  const pColorVar = PHASE_COLORS[wk.pCode] || '--accent';
+  document.getElementById('todayTitle').textContent = day.lbl;
+  document.getElementById('todayPhaseStr').textContent = `${wk.phase} · Week ${wk.wk} of 35`;
+  document.getElementById('hdrPhase').textContent = wk.phase;
+  document.getElementById('hdrPhase').style.background = `var(${pColorVar}-bg, var(--accent-dim))`;
+  document.getElementById('hdrPhase').style.color = `var(${pColorVar})`;
+  document.getElementById('progLbl').textContent = `Wk ${wk.wk}/35`;
+  document.getElementById('progFill').style.width = `${Math.round((wk.wk/35)*100)}%`;
+
+  // Zone badge
+  const zc = Z_CSS[day.t] || '';
+  const zl = Z_LABEL[day.t] || day.t.toUpperCase();
+  const zBadge = document.getElementById('wZoneBadge');
+  zBadge.textContent = zl;
+  zBadge.className = 'badge ' + zc;
+
+  // Workout body
+  let wHTML = `<div style="display:flex;flex-direction:column;gap:10px">`;
+  wHTML += `<div class="wtype-badge ${zc}">${zl}</div>`;
+  wHTML += `<div class="workout-name">${day.lbl}</div>`;
+  if (day.w) {
+    const wColor = getZoneColor(day.t);
+    wHTML += `<div><div class="workout-watts" style="color:${wColor}">${day.w}</div><div class="workout-watts-lbl">Target Power</div></div>`;
+  }
+  if (day.am) {
+    const bc = day.t === 'rest' ? 'var(--rst)' : getZoneColor(day.t);
+    wHTML += `<div class="session-block" style="border-color:${bc}"><div class="sess-time">Morning Session</div><div class="sess-desc">${day.am}</div></div>`;
+    if (day.pm && day.pm !== '—') {
+      wHTML += `<div class="session-block" style="border-color:var(--z2)"><div class="sess-time">Afternoon Session</div><div class="sess-desc">${day.pm}</div></div>`;
+    }
+  }
+  if (day.det) {
+    wHTML += `<div style="font-size:11px;color:var(--muted);line-height:1.5">${day.det.replace(/\n/g,'<br>')}</div>`;
+  }
+  wHTML += `</div>`;
+  document.getElementById('workoutBody').innerHTML = wHTML;
+
+  // Nutrition
+  const nutType = getNutType(day.t);
+  const nut = NUT_DATA[nutType];
+  const nutBadge = document.getElementById('nutDayBadge');
+  nutBadge.textContent = nut.name;
+  nutBadge.style.background = `var(${nut.color}-bg, var(--accent-dim))`;
+  nutBadge.style.color = `var(${nut.color})`;
+
+  let nHTML = `<div class="macro-cal"><div class="val">${nut.cal}</div><div class="lbl">Estimated Daily Calories</div></div>`;
+  nHTML += `<div class="macro-grid">
+    <div class="macro-item"><div class="macro-val">${nut.carbs}</div><div class="macro-unit">(${nut.carbsPkg})</div><div class="macro-lbl">Carbohydrates</div></div>
+    <div class="macro-item"><div class="macro-val">${nut.protein}</div><div class="macro-unit">(${nut.proteinPkg})</div><div class="macro-lbl">Protein</div></div>
+    <div class="macro-item"><div class="macro-val">${nut.fat}</div><div class="macro-unit">g</div><div class="macro-lbl">Fat</div></div>
+    <div class="macro-item" style="background:var(--accent-dim)"><div class="macro-val" style="color:var(--accent)">${nut.cal}</div><div class="macro-lbl">Total Calories</div></div>
+  </div>`;
+  nHTML += `<ul class="timing-list">
+    <li class="timing-item"><div class="tdot" style="background:var(${nut.color})"></div><span>${nut.timing}</span></li>
+    <li class="timing-item" style="font-style:italic"><div class="tdot" style="background:var(--muted)"></div><span>${nut.note}</span></li>
+  </ul>`;
+  document.getElementById('nutritionBody').innerHTML = nHTML;
+
+  // Recovery
+  const isRest = day.t === 'rest';
+  const isZ1 = day.t === 'z1';
+  let rHTML = '';
+  if (isRest) {
+    rHTML = `<div style="text-align:center;padding:20px 10px">
+      <div style="font-size:28px;margin-bottom:8px">🛌</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">Rest Day</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5">No mandatory stretching today.<br>Optional: light foam rolling or gentle walk.<br>Prioritize sleep (8–9 hrs).</div>
+    </div>`;
+  } else {
+    rHTML = `<ul class="stretch-list">
+      <li class="stretch-item"><div class="si-icon">🦵</div><div class="si-info"><div class="si-name">Hip Flexor Lunge</div><div class="si-detail">45–60s/side · 2 sets</div></div><div class="si-pri">★★★★★</div></li>
+      <li class="stretch-item"><div class="si-icon">🦿</div><div class="si-info"><div class="si-name">Quad Stretch</div><div class="si-detail">30–45s/side · 2 sets</div></div><div class="si-pri">★★★★★</div></li>
+      <li class="stretch-item"><div class="si-icon">🦵</div><div class="si-info"><div class="si-name">Hamstring Stretch (supine)</div><div class="si-detail">45–60s/side · 2 sets</div></div><div class="si-pri">★★★★★</div></li>
+      <li class="stretch-item"><div class="si-icon">🧘</div><div class="si-info"><div class="si-name">Pigeon Pose</div><div class="si-detail">60–90s/side · 1–2 sets</div></div><div class="si-pri">★★★★☆</div></li>
+      <li class="stretch-item"><div class="si-icon">🔄</div><div class="si-info"><div class="si-name">IT Band Foam Roll</div><div class="si-detail">60–90s/side roll</div></div><div class="si-pri">★★★★☆</div></li>
+    </ul>
+    <div style="margin-top:10px;font-size:10px;color:var(--muted);font-style:italic">15–20 min post-ride. Hip flexors = #1 priority.</div>`;
+  }
+  document.getElementById('recoveryBody').innerHTML = rHTML;
+}
+
+// =================== RENDER WEEK ===================
+function renderWeek() {
+  const wk = WEEKS[Math.max(0, Math.min(34, viewWeekIdx))];
+  if (!wk) return;
+  document.getElementById('weekPanelTitle').textContent = `Week ${wk.wk} — ${wk.phase}`;
+  const startD = getDateForDay(wk.wk-1, 0);
+  const endD = getDateForDay(wk.wk-1, 6);
+  document.getElementById('weekPanelDates').textContent = `${formatDate(startD)} – ${formatDate(endD)}, 2026`;
+  document.getElementById('weekTSS').textContent = `~${wk.tss}`;
+  document.getElementById('wnavLbl').textContent = `${wk.wk}/35`;
+
+  const grid = document.getElementById('wdaysGrid');
+  grid.innerHTML = DAYS_SHORT.map((dayName, i) => {
+    const day = wk.days[i];
+    const d = getDateForDay(wk.wk-1, i);
+    const isToday = d.getTime() === today.getTime();
+    const zc = Z_CSS[day.t] || 'bg-rest c-rest';
+    const zl = Z_LABEL[day.t] || 'REST';
+    const zColor = getZoneColor(day.t);
+    return `<div class="day-card ${isToday?'today-hl':''}">
+      <div class="day-top">
+        <div class="day-name">${dayName}</div>
+        <div class="day-date">${formatDate(d)}</div>
+      </div>
+      <div class="day-body">
+        <div class="day-tag ${zc}">${zl}</div>
+        <div class="day-title-txt">${day.lbl}</div>
+        ${day.w ? `<div class="day-watts-txt" style="color:${zColor}">${day.w}</div>` : ''}
+        ${day.am ? `<div class="day-det">AM: ${day.am}</div>` : ''}
+        ${day.pm && day.pm !== '—' ? `<div class="day-det">PM: ${day.pm}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// =================== RENDER CALENDAR ===================
+function renderCalendar(filter='all', search='') {
+  const tbody = document.getElementById('calBody');
+  const rows = WEEKS.filter(wk => {
+    if (filter !== 'all' && wk.pCode !== filter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return wk.days.some(d => d.lbl.toLowerCase().includes(q) || d.det.toLowerCase().includes(q));
+    }
+    return true;
+  });
+
+  tbody.innerHTML = rows.map(wk => {
+    const isCurWk = wk.wk === (currentWeekIdx + 1);
+    const startD = getDateForDay(wk.wk-1, 0);
+    const pColorVar = PHASE_COLORS[wk.pCode] || '--accent';
+    const cells = wk.days.map((day, i) => {
+      const d = getDateForDay(wk.wk-1, i);
+      const isToday = d.getTime() === today.getTime();
+      const zc = Z_CSS[day.t] || '';
+      const zl = Z_LABEL[day.t] || 'REST';
+      return `<td style="${isToday?'background:rgba(249,115,22,0.08);':''}" class="cal-day-cell">
+        <span class="cal-pill ${zc}">${zl}</span><br>
+        <span class="cal-day-txt">${day.lbl}</span>
+      </td>`;
+    }).join('');
+
+    return `<tr class="${isCurWk?'cur-wk':''}">
+      <td class="cal-wk">${wk.wk}</td>
+      <td><span style="font-size:10px;font-weight:700;color:var(${pColorVar})">${wk.phase}</span><br>
+        <span style="font-size:9px;color:var(--muted)">${formatDate(startD)}</span></td>
+      ${cells}
+      <td class="cal-tss">~${wk.tss}</td>
+    </tr>`;
+  }).join('');
+}
+
+// =================== RENDER NUTRITION PANEL ===================
+function renderNutPanel(type='rest') {
+  const nut = NUT_DATA[type];
+  if (!nut) return;
+  const html = `<div class="nut-2col">
+    <div class="card" style="border:none;background:var(--surface2);padding:14px">
+      <div class="macro-cal"><div class="val">${nut.cal}</div><div class="lbl">Total Daily Calories</div></div>
+      <div class="nut-mr"><span class="nut-mn">Carbohydrates</span><span class="nut-mv c-z2">${nut.carbs} <span style="font-size:10px;color:var(--muted)">(${nut.carbsPkg})</span></span></div>
+      <div class="nut-mr"><span class="nut-mn">Protein</span><span class="nut-mv c-ss">${nut.protein} <span style="font-size:10px;color:var(--muted)">(${nut.proteinPkg})</span></span></div>
+      <div class="nut-mr"><span class="nut-mn">Fat</span><span class="nut-mv c-muted">${nut.fat}</span></div>
+    </div>
+    <div>
+      <div class="nut-timing"><div class="nt-title">Timing & Priority</div><div class="nt-text">${nut.timing}</div></div>
+      <div class="nut-note">${nut.note}</div>
+    </div>
+  </div>`;
+  document.getElementById('nutArea').innerHTML = html;
+}
+
+// =================== NAVIGATION ===================
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    const panel = item.dataset.panel;
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + panel).classList.add('active');
+    if (panel === 'home') loadDashboardOverview();
+    if (panel === 'calendar') renderCalendar();
+    if (panel === 'zones') renderZoneBars();
+    if (panel === 'nutrition') renderNutPanel('rest');
+  });
+});
+
+document.getElementById('prevWkBtn').addEventListener('click', () => {
+  if (viewWeekIdx > 0) { viewWeekIdx--; renderWeek(); }
+});
+document.getElementById('nextWkBtn').addEventListener('click', () => {
+  if (viewWeekIdx < 34) { viewWeekIdx++; renderWeek(); }
+});
+
+// Calendar filter
+document.getElementById('calFilter').addEventListener('click', e => {
+  const btn = e.target.closest('.cal-pb');
+  if (!btn) return;
+  document.querySelectorAll('.cal-pb').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCalendar(btn.dataset.phase, document.getElementById('calSearch').value);
+});
+document.getElementById('calSearch').addEventListener('input', e => {
+  const activePhase = document.querySelector('.cal-pb.active')?.dataset.phase || 'all';
+  renderCalendar(activePhase, e.target.value);
+});
+
+// Nutrition tabs
+document.querySelectorAll('.nt').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nt').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderNutPanel(tab.dataset.nut);
+  });
+});
+
+// Theme toggle
+const themeBtn = document.getElementById('themeBtn');
+let isDark = true;
+themeBtn.addEventListener('click', () => {
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  themeBtn.innerHTML = isDark
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+});
+
+// =================== INIT ===================
+renderToday();
+renderWeek();
+renderZoneBars();
+initAuthPortal();
+</script>
+</body>
+</html>
