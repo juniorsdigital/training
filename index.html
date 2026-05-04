@@ -1016,26 +1016,6 @@ async function loadDashboardOverview() {
     const response = await fetch(url, { headers });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'Overview request failed.');
-    // #region agent log
-    fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'a3c7d5' },
-      body: JSON.stringify({
-        sessionId: 'a3c7d5',
-        location: 'index.html:loadDashboardOverview:afterJson',
-        message: 'client overview payload',
-        hypothesisId: 'H4',
-        runId: 'post-fix',
-        timestamp: Date.now(),
-        data: {
-          responseOk: response.ok,
-          topKeys: payload && typeof payload === 'object' ? Object.keys(payload) : [],
-          vitals: payload.vitals,
-          hasFetchErrors: !!payload.fetchErrors
-        }
-      })
-    }).catch(() => {});
-    // #endregion
     applyVitalsToChrome(payload.vitals);
     renderHomeOverview(payload);
     renderToday();

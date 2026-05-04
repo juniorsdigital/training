@@ -210,61 +210,6 @@ async function buildDashboardOverviewPayload(localDate) {
   }
 
   const vitals = pickVitals(athlete, wellness);
-  // #region agent log
-  fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'a3c7d5' },
-    body: JSON.stringify({
-      sessionId: 'a3c7d5',
-      location: 'api/lib/dashboardOverviewData.js:buildDashboardOverviewPayload',
-      message: 'vitals extraction',
-      hypothesisId: 'H1-H3-H5',
-      runId: 'post-fix',
-      timestamp: Date.now(),
-      data: {
-        athleteIdEnv: process.env.INTERVALS_ATHLETE_ID || '0',
-        athleteHttpOk: athleteRes.ok,
-        athleteHttpStatus: athleteRes.status,
-        wellnessHttpOk: wellnessRes.ok,
-        wellnessHttpStatus: wellnessRes.status,
-        athleteKeysFtpish: athlete
-          ? Object.keys(athlete).filter((k) => /ftp|vo2|weight|threshold/i.test(k))
-          : [],
-        wellnessKeysFtpish: wellness
-          ? Object.keys(wellness).filter((k) => /ftp|vo2|weight/i.test(k))
-          : [],
-        sampleAthleteNumeric: athlete
-          ? {
-              icu_ftp: athlete.icu_ftp,
-              icuFtp: athlete.icuFtp,
-              ftp: athlete.ftp,
-              threshold_power: athlete.threshold_power,
-              thresholdPower: athlete.thresholdPower,
-              vo2max: athlete.vo2max,
-              vo2_max: athlete.vo2_max,
-              vo2Max: athlete.vo2Max,
-              weight: athlete.weight,
-              weight_kg: athlete.weight_kg,
-              weightKg: athlete.weightKg
-            }
-          : null,
-        sampleWellnessNumeric: wellness
-          ? {
-              icu_ftp: wellness.icu_ftp,
-              icuFtp: wellness.icuFtp,
-              ftp: wellness.ftp,
-              vo2max: wellness.vo2max,
-              vo2_max: wellness.vo2_max,
-              vo2Max: wellness.vo2Max,
-              weight: wellness.weight
-            }
-          : null,
-        vitals,
-        fetchErrorKeys: Object.keys(fetchErrors)
-      }
-    })
-  }).catch(() => {});
-  // #endregion
   const primaryActivity = pickPrimaryActivity(activities, localDate);
   const activitiesToday = activities
     .filter((a) => activityLocalDay(a) === localDate)
