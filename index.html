@@ -230,7 +230,13 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--faint);border-radius:3px}
 .auth-overlay{position:fixed;inset:0;background:rgba(12,11,10,0.96);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+.auth-overlay.is-hidden{display:none!important}
 .auth-card{width:min(430px,100%);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.auth-card-top{display:flex;justify-content:flex-start;margin-bottom:10px}
+.auth-back-btn{border:0;background:transparent;color:var(--muted);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:4px 0}
+.auth-back-btn:hover{color:var(--accent)}
+.login-nav-btn{border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--accent);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;padding:5px 12px;margin-right:8px;flex-shrink:0}
+.login-nav-btn:hover{background:var(--accent-dim)}
 .auth-title{font-size:20px;font-weight:800;letter-spacing:-0.2px;margin-bottom:7px}
 .auth-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
 .auth-row{display:flex;flex-direction:column;gap:5px;margin-bottom:9px}
@@ -271,8 +277,11 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 </style>
 </head>
 <body>
-<div class="auth-overlay" id="authOverlay">
+<div class="auth-overlay is-hidden" id="authOverlay">
   <div class="auth-card">
+    <div class="auth-card-top">
+      <button type="button" class="auth-back-btn" id="authCancelBtn">← Back to dashboard</button>
+    </div>
     <div class="auth-title">Secure Dashboard Login</div>
     <div class="auth-sub">Sign in with your Supabase account to access this dashboard and sync Intervals.icu data.</div>
     <form id="authForm">
@@ -290,7 +299,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
   </div>
 </div>
 
-<div id="appShell" class="app-shell is-hidden">
+<div id="appShell" class="app-shell">
 <!-- HEADER -->
 <header class="header">
   <div class="logo">
@@ -313,11 +322,12 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
   <div class="hdr-spacer"></div>
   <div class="top-actions">
     <button class="refresh-btn" id="refreshOverviewBtn" type="button" title="Reload from Intervals.icu">Refresh</button>
-    <button class="sync-btn" id="syncIntervalsBtn" type="button">Sync to DB</button>
-    <span class="sync-status" id="syncStatus">Sign in to load data</span>
+    <button class="sync-btn" id="syncIntervalsBtn" type="button" style="display:none">Sync to DB</button>
+    <span class="sync-status" id="syncStatus">Loading…</span>
   </div>
-  <button class="signout-btn" id="signOutBtn" type="button">Sign out</button>
+  <button class="signout-btn" id="signOutBtn" type="button" style="display:none">Sign out</button>
   <div class="phase-wrap">
+    <button class="login-nav-btn" id="loginNavBtn" type="button">Login</button>
     <span class="badge" id="hdrPhase" style="background:var(--tst-bg);color:var(--tst)">Phase 0 – Testing</span>
     <div class="prog-wrap">
       <span class="prog-lbl" id="progLbl">Wk 1/35</span>
@@ -623,13 +633,26 @@ function setSyncStatus(msg, isError = false) {
   el.textContent = msg;
 }
 
-function showDashboard(visible) {
-  document.getElementById('authOverlay').style.display = visible ? 'none' : 'flex';
-  const shell = document.getElementById('appShell');
-  if (shell) {
-    if (visible) shell.classList.remove('is-hidden');
-    else shell.classList.add('is-hidden');
-  }
+function showLoginOverlay() {
+  document.getElementById('authOverlay').classList.remove('is-hidden');
+}
+
+function hideLoginOverlay() {
+  document.getElementById('authOverlay').classList.add('is-hidden');
+}
+
+function isSessionAllowed(session) {
+  if (!session?.user?.email || !allowedEmail) return false;
+  return session.user.email.toLowerCase() === allowedEmail;
+}
+
+function updateAuthenticatedChrome(isLoggedIn) {
+  const loginBtn = document.getElementById('loginNavBtn');
+  const signOutBtn = document.getElementById('signOutBtn');
+  const syncBtn = document.getElementById('syncIntervalsBtn');
+  if (loginBtn) loginBtn.style.display = isLoggedIn ? 'none' : '';
+  if (signOutBtn) signOutBtn.style.display = isLoggedIn ? '' : 'none';
+  if (syncBtn) syncBtn.style.display = isLoggedIn ? '' : 'none';
 }
 
 function getLocalISODate(d) {
@@ -826,24 +849,31 @@ function buildActivityStatsHtml(a) {
 }
 
 async function loadDashboardOverview() {
-  if (!supabaseClient) return;
   const btn = document.getElementById('refreshOverviewBtn');
   if (btn) btn.disabled = true;
   setSyncStatus('Loading Intervals.icu…');
   try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session?.access_token) throw new Error('Not signed in.');
     const localDate = getLocalISODate(today);
-    const response = await fetch(`/api/dashboard-overview?localDate=${encodeURIComponent(localDate)}`, {
-      headers: { Authorization: `Bearer ${session.access_token}` }
-    });
+    let session = null;
+    if (supabaseClient) {
+      const { data } = await supabaseClient.auth.getSession();
+      session = data.session;
+    }
+    const authed = isSessionAllowed(session);
+    const url = authed
+      ? `/api/dashboard-overview?localDate=${encodeURIComponent(localDate)}`
+      : `/api/dashboard-overview-public?localDate=${encodeURIComponent(localDate)}`;
+    const headers = authed && session?.access_token
+      ? { Authorization: `Bearer ${session.access_token}` }
+      : {};
+    const response = await fetch(url, { headers });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'Overview request failed.');
     applyVitalsToChrome(payload.vitals);
     renderHomeOverview(payload);
     renderToday();
     renderZoneBars();
-    setSyncStatus(`Updated ${new Date().toLocaleTimeString()}`);
+    setSyncStatus(authed ? `Updated ${new Date().toLocaleTimeString()}` : `Live data · ${new Date().toLocaleTimeString()} · Sign in to sync to DB`);
   } catch (error) {
     setSyncStatus(error.message, true);
     document.getElementById('homeOverviewErr').style.display = '';
@@ -893,22 +923,30 @@ async function initAuthPortal() {
     supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
     authReady = true;
     setAuthMessage('Enter your credentials to continue.');
-    supabaseClient.auth.onAuthStateChange((event) => {
+    supabaseClient.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
-        showDashboard(false);
+        updateAuthenticatedChrome(false);
+        hideLoginOverlay();
         setAuthMessage('Signed out.');
+        loadDashboardOverview();
+      } else if (event === 'SIGNED_IN' && session && isSessionAllowed(session)) {
+        hideLoginOverlay();
+        updateAuthenticatedChrome(true);
+        loadDashboardOverview();
       }
     });
     const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session?.user?.email?.toLowerCase() === allowedEmail) {
-      showDashboard(true);
-      loadDashboardOverview();
+    if (session?.user && !isSessionAllowed(session)) {
+      await supabaseClient.auth.signOut();
+      updateAuthenticatedChrome(false);
     } else {
-      showDashboard(false);
+      updateAuthenticatedChrome(isSessionAllowed(session));
     }
   } catch (error) {
     setAuthMessage(error.message, true);
-    showDashboard(false);
+    supabaseClient = null;
+    authReady = false;
+    updateAuthenticatedChrome(false);
   }
 }
 
@@ -932,8 +970,7 @@ document.getElementById('authForm').addEventListener('submit', async (event) => 
       throw new Error('Unauthorized account.');
     }
     setAuthMessage('');
-    showDashboard(true);
-    await loadDashboardOverview();
+    hideLoginOverlay();
   } catch (error) {
     setAuthMessage(error.message || 'Sign in failed.', true);
   } finally {
@@ -941,11 +978,22 @@ document.getElementById('authForm').addEventListener('submit', async (event) => 
   }
 });
 
+document.getElementById('loginNavBtn').addEventListener('click', () => {
+  if (authReady) setAuthMessage('Enter your credentials to continue.');
+  showLoginOverlay();
+});
+
+document.getElementById('authCancelBtn').addEventListener('click', () => {
+  hideLoginOverlay();
+});
+
 document.getElementById('syncIntervalsBtn').addEventListener('click', handleIntervalsSync);
 document.getElementById('refreshOverviewBtn').addEventListener('click', loadDashboardOverview);
 document.getElementById('signOutBtn').addEventListener('click', async () => {
   if (supabaseClient) await supabaseClient.auth.signOut();
-  showDashboard(false);
+  updateAuthenticatedChrome(false);
+  hideLoginOverlay();
+  await loadDashboardOverview();
 });
 
 // =================== DATA ===================
@@ -1647,10 +1695,14 @@ themeBtn.addEventListener('click', () => {
 });
 
 // =================== INIT ===================
-renderToday();
-renderWeek();
-renderZoneBars();
-initAuthPortal();
+async function initApp() {
+  renderToday();
+  renderWeek();
+  renderZoneBars();
+  await initAuthPortal();
+  await loadDashboardOverview();
+}
+initApp();
 </script>
 </body>
 </html>

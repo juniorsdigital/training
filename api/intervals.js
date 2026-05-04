@@ -1,5 +1,4 @@
 const { assertAllowedEmail, verifySupabaseUser } = require('./lib/supabaseAuth.js');
-const { agentDebugLog } = require('./lib/agentDebugLog.js');
 
 const INTERVALS_BASE_URL = 'https://intervals.icu/api/v1';
 
@@ -56,15 +55,6 @@ async function persistActivitiesToSupabase(activities) {
 }
 
 module.exports = async function handler(req, res) {
-  // #region agent log
-  agentDebugLog({
-    hypothesisId: 'H2',
-    location: 'api/intervals.js:entry',
-    message: 'intervals sync handler invoked',
-    data: { method: req.method, url: String(req.url || '') }
-  });
-  // #endregion
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
