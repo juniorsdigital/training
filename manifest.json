@@ -1,7 +1,7 @@
 {
-  "name": "Peak Cycling Dashboard",
-  "short_name": "Peak Cycling",
-  "description": "Training dashboard for peak cycling performance",
+  "name": "JRS Tracker",
+  "short_name": "JRS Tracker",
+  "description": "JRS training dashboard",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
