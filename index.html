@@ -402,6 +402,64 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
   margin:0;
 }
 .public-err{font-size:13px;color:var(--z5);margin-top:12px;line-height:1.5}
+/* CALORIE TRACKER */
+.kcal-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:18px}
+.kcal-section-hdr{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.kcal-section-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px}
+.kcal-date-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kcal-date-input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:4px 8px;outline:none;cursor:pointer}
+.kcal-date-input:focus{border-color:var(--accent)}
+.kcal-goal-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.kcal-goal-input{width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:4px 6px;text-align:right;outline:none}
+.kcal-goal-input:focus{border-color:var(--accent)}
+.kcal-save-btn{border:1px solid var(--border);border-radius:16px;background:var(--surface2);color:var(--muted);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;transition:all 0.15s}
+.kcal-save-btn:hover{color:var(--accent);border-color:rgba(249,115,22,0.4)}
+.kcal-summary{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.kcal-nums{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);white-space:nowrap}
+.kcal-nums .eaten{font-size:18px;font-weight:800;color:var(--accent)}
+.kcal-nums .over{color:var(--z5)}
+.kcal-bar-wrap{flex:1;min-width:80px;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.kcal-bar-fill{height:100%;border-radius:4px;background:var(--accent);transition:width 0.4s ease}
+.kcal-bar-fill.over{background:var(--z5)}
+.kcal-burnt{font-size:11px;color:var(--muted);white-space:nowrap}
+.kcal-burnt b{color:var(--z3);font-variant-numeric:tabular-nums}
+.kcal-body{padding:0}
+.kcal-add-row{display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.kcal-item-input{flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:6px 9px;outline:none}
+.kcal-item-input:focus{border-color:var(--accent)}
+.kcal-cal-input{width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:6px 8px;text-align:right;outline:none;font-variant-numeric:tabular-nums}
+.kcal-cal-input:focus{border-color:var(--accent)}
+.kcal-add-btn{border:0;border-radius:var(--radius-sm);background:var(--accent);color:white;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;padding:6px 12px;transition:background 0.15s;white-space:nowrap}
+.kcal-add-btn:hover{background:var(--accent-hover)}
+.kcal-add-btn:disabled{opacity:0.5;cursor:not-allowed}
+.kcal-log-table{width:100%;border-collapse:collapse}
+.kcal-log-table th{padding:6px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.kcal-log-table th:last-child{text-align:right;width:24px}
+.kcal-log-table td{padding:8px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
+.kcal-log-table tr:last-child td{border-bottom:none}
+.kcal-log-table .td-cal{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)}
+.kcal-log-table .td-del{text-align:right}
+.kcal-del-btn{border:0;background:transparent;color:var(--faint);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:3px;transition:color 0.15s}
+.kcal-del-btn:hover{color:var(--z5)}
+.kcal-empty{padding:20px 14px;text-align:center;font-size:12px;color:var(--muted);font-style:italic}
+.kcal-err{padding:8px 14px;font-size:11px;color:var(--z5)}
+/* OVERVIEW CALORIES CARD */
+.kcal-ov-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:18px}
+.kcal-ov-hdr{padding:10px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.kcal-ov-nums{display:flex;align-items:baseline;gap:4px;padding:14px 14px 6px}
+.kcal-ov-eaten{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent)}
+.kcal-ov-sep{font-size:14px;color:var(--muted)}
+.kcal-ov-goal{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
+.kcal-ov-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px}
+.kcal-ov-bar-wrap{margin:4px 14px 10px;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.kcal-ov-bar-fill{height:100%;border-radius:4px;background:var(--accent);transition:width 0.6s ease}
+.kcal-ov-bar-fill.over{background:var(--z5)}
+.kcal-ov-rows{padding:0 14px 12px;display:flex;flex-direction:column;gap:0}
+.kcal-ov-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.kcal-ov-row:last-child{border-bottom:none}
+.kcal-ov-row .k{color:var(--muted)}
+.kcal-ov-row .v{font-weight:700;font-variant-numeric:tabular-nums}
+.kcal-ov-empty{padding:14px;font-size:12px;color:var(--muted);font-style:italic;text-align:center}
 </style>
 </head>
 <body>
@@ -580,6 +638,13 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
           <div class="card-body" id="homeCompletedBody"></div>
         </div>
       </div>
+      <div class="kcal-ov-card" id="kcalOverviewCard" style="display:none">
+        <div class="kcal-ov-hdr">
+          <span class="card-title">Today's calories</span>
+          <span class="badge" id="kcalOvBadge" style="background:var(--accent-dim);color:var(--accent)">Nutrition</span>
+        </div>
+        <div id="kcalOvBody"><div class="kcal-ov-empty">No calorie data logged yet.</div></div>
+      </div>
       <div class="home-err" id="homeOverviewErr" style="display:none"></div>
     </div>
 
@@ -706,6 +771,38 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 
     <!-- NUTRITION PANEL -->
     <div class="panel" id="panel-nutrition">
+      <!-- CALORIE TRACKER -->
+      <div class="kcal-section">
+        <div class="kcal-section-hdr">
+          <span class="kcal-section-title">Calorie Log</span>
+          <div class="kcal-date-row">
+            <input type="date" class="kcal-date-input" id="kcalDateInput">
+            <div class="kcal-goal-wrap">
+              <span>Goal:</span>
+              <input type="number" class="kcal-goal-input" id="kcalGoalInput" min="0" max="9999" placeholder="kcal">
+              <button class="kcal-save-btn" id="kcalSaveGoalBtn">Save</button>
+            </div>
+          </div>
+        </div>
+        <div class="kcal-summary" id="kcalSummary">
+          <span class="kcal-nums"><span class="eaten" id="kcalEaten">0</span> / <span id="kcalGoalDisp">—</span> kcal</span>
+          <div class="kcal-bar-wrap"><div class="kcal-bar-fill" id="kcalBarFill" style="width:0%"></div></div>
+          <span class="kcal-burnt" id="kcalBurntDisp" style="display:none">Burnt: <b id="kcalBurntVal">—</b> kcal</span>
+        </div>
+        <div class="kcal-body">
+          <div class="kcal-add-row">
+            <input type="text" class="kcal-item-input" id="kcalItemInput" placeholder="Food item or meal…">
+            <input type="number" class="kcal-cal-input" id="kcalCalInput" placeholder="kcal" min="0" max="9999">
+            <button class="kcal-add-btn" id="kcalAddBtn">+ Add</button>
+          </div>
+          <table class="kcal-log-table" id="kcalTable" style="display:none">
+            <thead><tr><th>Item</th><th>kcal</th><th></th></tr></thead>
+            <tbody id="kcalTableBody"></tbody>
+          </table>
+          <div class="kcal-empty" id="kcalEmpty">No entries yet — add meals and snacks above.</div>
+          <div class="kcal-err" id="kcalErr" style="display:none"></div>
+        </div>
+      </div>
       <div class="sec-title">Nutrition by Day Type</div>
       <div class="nut-tabs" id="nutTabs">
         <button class="nt active" data-nut="rest">Rest Day</button>
@@ -1047,9 +1144,17 @@ async function loadDashboardOverview() {
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'Overview request failed.');
     applyVitalsToChrome(payload.vitals);
+    // Stash burnt calories from today's primary activity
+    kcalBurntFromIntervals = payload.primaryActivity?.calories ?? null;
     renderHomeOverview(payload);
     renderToday();
     renderZoneBars();
+    // Load today's calorie data for overview card
+    try {
+      await kcalFetch(localDate);
+      const total = kcalLogs.reduce((s, e) => s + (e.calories || 0), 0);
+      renderCalorieOverviewCard(total, kcalGoal?.goal_calories ?? null, kcalBurntFromIntervals);
+    } catch (_) { /* non-critical */ }
     setSyncStatus(`Updated ${new Date().toLocaleTimeString()}`);
   } catch (error) {
     setSyncStatus(error.message, true);
@@ -1913,6 +2018,247 @@ function renderNutPanel(type='rest') {
   document.getElementById('nutArea').innerHTML = html;
 }
 
+// =================== CALORIE TRACKER ===================
+let kcalCurrentDate = getLocalISODate(today);
+let kcalLogs = [];
+let kcalGoal = null;
+let kcalBurntFromIntervals = null;
+
+function kcalGetSession() {
+  if (!supabaseClient) return null;
+  return supabaseClient.auth.getSession().then(r => r.data.session);
+}
+
+async function kcalFetch(date) {
+  const session = await kcalGetSession();
+  if (!session) return;
+  const resp = await fetch(`/api/nutrition?date=${encodeURIComponent(date)}`, {
+    headers: { Authorization: `Bearer ${session.access_token}` }
+  });
+  if (!resp.ok) throw new Error('Failed to load calorie log.');
+  const data = await resp.json();
+  kcalLogs = data.logs || [];
+  kcalGoal = data.goal;
+}
+
+async function kcalPostEntry(date, item, calories) {
+  const session = await kcalGetSession();
+  if (!session) throw new Error('Not signed in.');
+  const resp = await fetch('/api/nutrition', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify({ date, item, calories })
+  });
+  if (!resp.ok) {
+    const d = await resp.json().catch(() => ({}));
+    throw new Error(d.error || 'Failed to add entry.');
+  }
+  return resp.json();
+}
+
+async function kcalDeleteEntry(id) {
+  const session = await kcalGetSession();
+  if (!session) throw new Error('Not signed in.');
+  const resp = await fetch(`/api/nutrition?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${session.access_token}` }
+  });
+  if (!resp.ok) throw new Error('Failed to delete entry.');
+}
+
+async function kcalSaveGoal(date, goalCals) {
+  const session = await kcalGetSession();
+  if (!session) throw new Error('Not signed in.');
+  const resp = await fetch('/api/nutrition', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify({ date, goal_calories: goalCals })
+  });
+  if (!resp.ok) {
+    const d = await resp.json().catch(() => ({}));
+    throw new Error(d.error || 'Failed to save goal.');
+  }
+  return resp.json();
+}
+
+function kcalRenderTracker() {
+  const total = kcalLogs.reduce((s, e) => s + (e.calories || 0), 0);
+  const goal = kcalGoal?.goal_calories ?? null;
+
+  // Summary bar
+  document.getElementById('kcalEaten').textContent = total;
+  const goalDisp = document.getElementById('kcalGoalDisp');
+  const bar = document.getElementById('kcalBarFill');
+  if (goal) {
+    goalDisp.textContent = goal;
+    const pct = Math.min(100, Math.round((total / goal) * 100));
+    bar.style.width = pct + '%';
+    bar.classList.toggle('over', total > goal);
+  } else {
+    goalDisp.textContent = '—';
+    bar.style.width = '0%';
+    bar.classList.remove('over');
+  }
+
+  // Burnt calories from Intervals (if today)
+  const burntWrap = document.getElementById('kcalBurntDisp');
+  if (kcalBurntFromIntervals && kcalCurrentDate === getLocalISODate(today)) {
+    document.getElementById('kcalBurntVal').textContent = Math.round(kcalBurntFromIntervals);
+    burntWrap.style.display = '';
+  } else {
+    burntWrap.style.display = 'none';
+  }
+
+  // Table
+  const tbody = document.getElementById('kcalTableBody');
+  const table = document.getElementById('kcalTable');
+  const empty = document.getElementById('kcalEmpty');
+  if (kcalLogs.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = '';
+    tbody.innerHTML = '';
+  } else {
+    table.style.display = '';
+    empty.style.display = 'none';
+    tbody.innerHTML = kcalLogs.map(e => `
+      <tr>
+        <td>${escapeHtml(e.item)}</td>
+        <td class="td-cal">${e.calories}</td>
+        <td class="td-del"><button class="kcal-del-btn" data-id="${escapeHtml(e.id)}" title="Remove">×</button></td>
+      </tr>`).join('');
+  }
+
+  // Goal input
+  if (goal) document.getElementById('kcalGoalInput').value = goal;
+
+  // Update overview card too if we're looking at today
+  if (kcalCurrentDate === getLocalISODate(today)) {
+    renderCalorieOverviewCard(total, goal, kcalBurntFromIntervals);
+  }
+}
+
+async function loadNutritionTracker(date) {
+  date = date || kcalCurrentDate;
+  kcalCurrentDate = date;
+  document.getElementById('kcalDateInput').value = date;
+  document.getElementById('kcalErr').style.display = 'none';
+  try {
+    await kcalFetch(date);
+    kcalRenderTracker();
+  } catch (e) {
+    const errEl = document.getElementById('kcalErr');
+    errEl.textContent = e.message;
+    errEl.style.display = '';
+  }
+}
+
+function renderCalorieOverviewCard(eaten, goal, burnt) {
+  const card = document.getElementById('kcalOverviewCard');
+  const body = document.getElementById('kcalOvBody');
+  const badge = document.getElementById('kcalOvBadge');
+  card.style.display = '';
+
+  if (eaten == null && goal == null) {
+    body.innerHTML = '<div class="kcal-ov-empty">No calorie data logged yet.</div>';
+    badge.textContent = 'Nutrition';
+    return;
+  }
+
+  const pct = goal ? Math.min(100, Math.round(((eaten || 0) / goal) * 100)) : 0;
+  const over = goal && eaten > goal;
+  badge.textContent = goal ? `${pct}%` : 'Nutrition';
+  badge.style.background = over ? 'rgba(239,68,68,0.15)' : 'var(--accent-dim)';
+  badge.style.color = over ? 'var(--z5)' : 'var(--accent)';
+
+  const rows = [];
+  if (goal) rows.push(`<div class="kcal-ov-row"><span class="k">Goal</span><span class="v">${goal} kcal</span></div>`);
+  const remaining = goal ? goal - (eaten || 0) : null;
+  if (remaining !== null) {
+    const label = remaining < 0 ? 'Over by' : 'Remaining';
+    const val = Math.abs(remaining);
+    rows.push(`<div class="kcal-ov-row"><span class="k">${label}</span><span class="v" style="color:${remaining < 0 ? 'var(--z5)' : 'var(--z3)'}">${val} kcal</span></div>`);
+  }
+  if (burnt) rows.push(`<div class="kcal-ov-row"><span class="k">Burnt (Intervals)</span><span class="v" style="color:var(--z2)">${Math.round(burnt)} kcal</span></div>`);
+
+  body.innerHTML = `
+    <div class="kcal-ov-nums">
+      <span class="kcal-ov-eaten${over ? ' over' : ''}" style="${over ? 'color:var(--z5)' : ''}">${eaten || 0}</span>
+      <span class="kcal-ov-sep">/</span>
+      <span class="kcal-ov-goal">${goal || '?'}</span>
+      <span class="kcal-ov-label" style="margin-left:4px">kcal eaten</span>
+    </div>
+    <div class="kcal-ov-bar-wrap"><div class="kcal-ov-bar-fill${over ? ' over' : ''}" style="width:${pct}%"></div></div>
+    ${rows.length ? `<div class="kcal-ov-rows">${rows.join('')}</div>` : ''}`;
+}
+
+// Wire up tracker events (called once DOM is ready)
+function initCalorieTracker() {
+  const dateInput = document.getElementById('kcalDateInput');
+  dateInput.value = kcalCurrentDate;
+  dateInput.addEventListener('change', () => loadNutritionTracker(dateInput.value));
+
+  document.getElementById('kcalSaveGoalBtn').addEventListener('click', async () => {
+    const val = parseInt(document.getElementById('kcalGoalInput').value, 10);
+    if (!val || val <= 0) return;
+    const btn = document.getElementById('kcalSaveGoalBtn');
+    btn.disabled = true;
+    try {
+      const r = await kcalSaveGoal(kcalCurrentDate, val);
+      kcalGoal = r.goal;
+      kcalRenderTracker();
+    } catch (e) {
+      const errEl = document.getElementById('kcalErr');
+      errEl.textContent = e.message;
+      errEl.style.display = '';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('kcalAddBtn').addEventListener('click', async () => {
+    const item = document.getElementById('kcalItemInput').value.trim();
+    const calories = parseInt(document.getElementById('kcalCalInput').value, 10);
+    if (!item || !calories || calories < 0) return;
+    const btn = document.getElementById('kcalAddBtn');
+    btn.disabled = true;
+    try {
+      const r = await kcalPostEntry(kcalCurrentDate, item, calories);
+      kcalLogs.push(r.log);
+      document.getElementById('kcalItemInput').value = '';
+      document.getElementById('kcalCalInput').value = '';
+      kcalRenderTracker();
+    } catch (e) {
+      const errEl = document.getElementById('kcalErr');
+      errEl.textContent = e.message;
+      errEl.style.display = '';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Allow Enter key on calorie input to submit
+  document.getElementById('kcalCalInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('kcalAddBtn').click();
+  });
+
+  document.getElementById('kcalTableBody').addEventListener('click', async e => {
+    const btn = e.target.closest('.kcal-del-btn');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    btn.disabled = true;
+    try {
+      await kcalDeleteEntry(id);
+      kcalLogs = kcalLogs.filter(l => l.id !== id);
+      kcalRenderTracker();
+    } catch (err) {
+      btn.disabled = false;
+      const errEl = document.getElementById('kcalErr');
+      errEl.textContent = err.message;
+      errEl.style.display = '';
+    }
+  });
+}
+
 // =================== NAVIGATION ===================
 function navigateToPanel(panel) {
   document.querySelectorAll('.nav-item').forEach(n => {
@@ -1924,7 +2270,7 @@ function navigateToPanel(panel) {
   if (panel === 'home') loadDashboardOverview();
   if (panel === 'calendar') renderCalendar();
   if (panel === 'zones') renderZoneBars();
-  if (panel === 'nutrition') renderNutPanel('rest');
+  if (panel === 'nutrition') { renderNutPanel('rest'); loadNutritionTracker(); }
   // Close sidebar on mobile after navigation
   closeSidebar();
   window.scrollTo(0, 0);
@@ -2004,6 +2350,7 @@ async function initApp() {
   const { loggedIn } = await initAuthPortal();
   if (loggedIn) {
     setViewMode('full');
+    initCalorieTracker();
     renderToday();
     renderWeek();
     renderZoneBars();
