@@ -1,11 +1,12 @@
 const { assertAllowedEmail, verifySupabaseUser } = require('./lib/supabaseAuth.js');
+const { intervalsAuthorizationValue } = require('./lib/intervalsBasicAuth.js');
 
 const INTERVALS_BASE_URL = 'https://intervals.icu/api/v1';
 
 async function fetchIntervalsActivities(intervalsApiKey) {
   const response = await fetch(`${INTERVALS_BASE_URL}/athlete/0/activities?limit=25`, {
     headers: {
-      Authorization: `Bearer ${intervalsApiKey}`
+      Authorization: intervalsAuthorizationValue(intervalsApiKey)
     }
   });
 

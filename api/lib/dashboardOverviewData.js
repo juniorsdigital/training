@@ -1,5 +1,7 @@
 'use strict';
 
+const { intervalsAuthorizationValue } = require('./intervalsBasicAuth.js');
+
 const INTERVALS_BASE = 'https://intervals.icu/api/v1';
 
 function numOrNull(...vals) {
@@ -89,7 +91,7 @@ function pickPrimaryActivity(activities, localDate) {
 
 async function intervalsFetchJson(apiKey, path) {
   const response = await fetch(`${INTERVALS_BASE}${path}`, {
-    headers: { Authorization: `Bearer ${apiKey}` }
+    headers: { Authorization: intervalsAuthorizationValue(apiKey) }
   });
   const text = await response.text();
   if (!response.ok) {
