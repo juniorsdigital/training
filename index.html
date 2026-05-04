@@ -343,26 +343,87 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .home-stat-v{font-weight:700;font-variant-numeric:tabular-nums}
 .home-list{margin:0;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.55}
 .home-err{font-size:11px;color:var(--z5);margin-top:8px}
-/* Public minimal (anonymous) */
-.public-shell{padding-top:max(clamp(20px,5vw,40px),calc(var(--safe-top) + 8px));padding-left:clamp(16px,5vw,28px);padding-right:clamp(16px,5vw,28px);padding-bottom:max(56px,calc(var(--safe-bottom) + 40px));max-width:22rem;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+/* ── Public shell (anonymous / home-screen view) ─────────── */
+.public-shell{
+  width:100%;
+  padding-top:max(28px,calc(var(--safe-top) + 12px));
+  padding-left:max(20px,var(--safe-left));
+  padding-right:max(20px,var(--safe-right));
+  padding-bottom:max(40px,calc(var(--safe-bottom) + 24px));
+  min-height:100vh;min-height:100dvh;
+  display:flex;flex-direction:column;
+}
 .public-shell.is-hidden{display:none!important}
-.public-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:clamp(28px,8vh,56px)}
-.public-date{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint);font-weight:600;line-height:1.4}
-.public-top-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.public-login{border:0;background:none;color:var(--faint);font:inherit;font-size:10px;font-weight:500;letter-spacing:0.06em;cursor:pointer;padding:2px 0;text-transform:lowercase}
-.public-login:hover{color:var(--accent)}
-.public-theme{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--faint);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:2px}
-.public-theme:hover{color:var(--text)}
-.public-main{flex:1;display:flex;flex-direction:column;gap:clamp(1.75rem,5vh,2.5rem)}
-.public-sec{}
-.public-label{font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--faint);margin:0 0 0.5rem}
-.public-block{font-size:14px;line-height:1.6;color:var(--text);font-weight:450}
-.public-block .pb-line{display:block;margin-top:0.35em;color:var(--muted);font-size:12px;font-weight:400;line-height:1.5}
-.public-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 12px;padding-top:4px;border-top:1px solid var(--border)}
-.public-metrics div{display:flex;flex-direction:column;gap:4px}
-.public-metrics dt{font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint)}
-.public-metrics dd{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);line-height:1.2}
-.public-err{font-size:11px;color:var(--z5);margin-top:12px;line-height:1.4}
+/* Center on tablet/desktop */
+@media(min-width:600px){
+  .public-shell{max-width:34rem;margin:0 auto;padding-top:max(40px,calc(var(--safe-top) + 16px))}
+}
+.public-top{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:28px;
+  padding-bottom:18px;
+  border-bottom:1px solid var(--border);
+}
+.public-date{
+  font-size:13px;letter-spacing:0.05em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;line-height:1.3;
+}
+.public-top-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.public-login{
+  border:1px solid var(--border);
+  background:var(--surface2);
+  color:var(--text);
+  font-family:inherit;font-size:13px;font-weight:600;
+  cursor:pointer;
+  padding:0 16px;
+  height:40px;
+  border-radius:20px;
+  letter-spacing:0.01em;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .15s,border-color .15s;
+}
+.public-login:hover,.public-login:active{background:var(--surface3);border-color:var(--accent);color:var(--accent)}
+.public-theme{
+  width:40px;height:40px;border-radius:50%;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--muted);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;
+  flex-shrink:0;
+}
+.public-theme:hover,.public-theme:active{color:var(--text);background:var(--surface3)}
+.public-main{flex:1;display:flex;flex-direction:column;gap:28px}
+.public-sec{display:flex;flex-direction:column;gap:10px}
+.public-label{
+  font-size:11px;font-weight:700;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--muted);margin:0;
+}
+.public-block{
+  font-size:16px;line-height:1.65;color:var(--text);font-weight:500;
+}
+.public-block .pb-line{
+  display:block;margin-top:6px;
+  color:var(--muted);font-size:14px;font-weight:400;line-height:1.55;
+}
+.public-metrics{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.public-metric-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 12px;
+  display:flex;flex-direction:column;gap:6px;
+  text-align:center;
+}
+.public-metrics dt{
+  font-size:10px;font-weight:700;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);
+}
+.public-metrics dd{
+  font-size:22px;font-weight:800;
+  font-variant-numeric:tabular-nums;color:var(--text);line-height:1;
+  margin:0;
+}
+.public-err{font-size:13px;color:var(--z5);margin-top:12px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -392,15 +453,15 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
   <header class="public-top">
     <span class="public-date" id="publicDateStr">—</span>
     <div class="public-top-actions">
-      <button type="button" class="public-login" id="publicLoginBtn">login</button>
+      <button type="button" class="public-login" id="publicLoginBtn">Sign in</button>
       <button type="button" class="public-theme" id="publicThemeBtn" aria-label="Toggle theme">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
     </div>
   </header>
   <main class="public-main">
     <section class="public-sec">
-      <h2 class="public-label">Workout</h2>
+      <h2 class="public-label">Today's Workout</h2>
       <div id="publicPlan" class="public-block"></div>
     </section>
     <section class="public-sec">
@@ -410,9 +471,9 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
     <section class="public-sec">
       <h2 class="public-label">Metrics</h2>
       <dl class="public-metrics" id="publicMetrics">
-        <div><dt>FTP</dt><dd id="publicFtp">—</dd></div>
-        <div><dt>VO2max</dt><dd id="publicVo2">—</dd></div>
-        <div><dt>Weight</dt><dd id="publicWeight">—</dd></div>
+        <div class="public-metric-card"><dt>FTP</dt><dd id="publicFtp">—</dd></div>
+        <div class="public-metric-card"><dt>VO2max</dt><dd id="publicVo2">—</dd></div>
+        <div class="public-metric-card"><dt>Weight</dt><dd id="publicWeight">—</dd></div>
       </dl>
     </section>
     <p class="public-err" id="publicErr" style="display:none" role="alert"></p>
