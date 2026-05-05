@@ -1133,6 +1133,12 @@ function renderBodyBattery(bodyBattery) {
   const daily = bodyBattery?.dailyEnergy || {};
   const trend = bodyBattery?.fitnessTrend || {};
   const factorsEl = document.getElementById('bbFactors');
+  const localDate = getLocalISODate(today);
+  const nutritionGoal = kcalGoal?.goal_calories ?? null;
+  const nutritionTotal = Array.isArray(kcalLogs)
+    ? kcalLogs.reduce((sum, row) => sum + (Number(row?.calories) || 0), 0)
+    : 0;
+  const nutritionHasInput = kcalCurrentDate === localDate && (nutritionGoal != null || nutritionTotal > 0);
 
   document.getElementById('bbDailyScore').textContent = daily.score != null ? `${Math.round(daily.score)}%` : '—';
   const statusEl = document.getElementById('bbDailyStatus');
@@ -1155,8 +1161,19 @@ function renderBodyBattery(bodyBattery) {
   if (!rows.length) {
     rows.push('<div class="battery-factor"><span>Not enough recovery/load data yet.</span><span>—</span></div>');
   }
-  if (Array.isArray(daily.missing) && daily.missing.length) {
-    rows.push(`<div class="battery-factor"><span>Missing inputs</span><span>${escapeHtml(daily.missing.join(', '))}</span></div>`);
+  if (nutritionHasInput) {
+    const nutritionText = nutritionGoal
+      ? `${nutritionTotal} / ${nutritionGoal} kcal`
+      : `${nutritionTotal} kcal logged`;
+    rows.push(`<div class="battery-factor"><span>Nutrition today</span><span>${escapeHtml(nutritionText)}</span></div>`);
+  }
+  const missing = Array.isArray(daily.missing) ? daily.missing.slice() : [];
+  if (nutritionHasInput) {
+    const nutritionIdx = missing.indexOf('nutrition');
+    if (nutritionIdx >= 0) missing.splice(nutritionIdx, 1);
+  }
+  if (missing.length) {
+    rows.push(`<div class="battery-factor"><span>Missing inputs</span><span>${escapeHtml(missing.join(', '))}</span></div>`);
   }
   factorsEl.innerHTML = rows.join('');
 }
@@ -1308,39 +1325,41 @@ async function loadDashboardOverview() {
     applyVitalsToChrome(payload.vitals);
     // Stash burnt calories from today's primary activity
     kcalBurntFromIntervals = payload.primaryActivity?.calories ?? null;
+    const autoGoals = getAutoGoalsForDate(localDate);
+    try {
+      await kcalFetch(localDate);
+    } catch (_) {
+      kcalLogs = [];
+      kcalGoal = null;
+    }
+    // Use saved goal if available, else fall back to training-day goals.
+    if (!kcalGoal) {
+      kcalGoal = {
+        goal_calories: autoGoals.kcal,
+        carbs_goal: autoGoals.carbs,
+        protein_goal: autoGoals.protein,
+        fat_goal: autoGoals.fat,
+        _auto: true
+      };
+    }
     renderHomeOverview(payload);
     renderToday();
     renderZoneBars();
-    // Load today's calorie + macro data for overview card
-    try {
-      await kcalFetch(localDate);
-      const autoGoals = getAutoGoalsForDate(localDate);
-      // Use saved goal if available, else fall back to training-day goals
-      if (!kcalGoal) {
-        kcalGoal = {
-          goal_calories: autoGoals.kcal,
-          carbs_goal: autoGoals.carbs,
-          protein_goal: autoGoals.protein,
-          fat_goal: autoGoals.fat,
-          _auto: true
-        };
+    const total = kcalLogs.reduce((s, e) => s + (e.calories || 0), 0);
+    const totalCarbs = kcalLogs.reduce((s, e) => s + (e.carbs || 0), 0);
+    const totalProtein = kcalLogs.reduce((s, e) => s + (e.protein || 0), 0);
+    const totalFat = kcalLogs.reduce((s, e) => s + (e.fat || 0), 0);
+    renderCalorieOverviewCard(
+      total,
+      kcalGoal?.goal_calories ?? null,
+      kcalBurntFromIntervals,
+      {
+        carbs: totalCarbs, carbsGoal: kcalGoal?.carbs_goal ?? null,
+        protein: totalProtein, proteinGoal: kcalGoal?.protein_goal ?? null,
+        fat: totalFat, fatGoal: kcalGoal?.fat_goal ?? null,
+        dayLabel: autoGoals.dayLabel
       }
-      const total = kcalLogs.reduce((s, e) => s + (e.calories || 0), 0);
-      const totalCarbs = kcalLogs.reduce((s, e) => s + (e.carbs || 0), 0);
-      const totalProtein = kcalLogs.reduce((s, e) => s + (e.protein || 0), 0);
-      const totalFat = kcalLogs.reduce((s, e) => s + (e.fat || 0), 0);
-      renderCalorieOverviewCard(
-        total,
-        kcalGoal?.goal_calories ?? null,
-        kcalBurntFromIntervals,
-        {
-          carbs: totalCarbs, carbsGoal: kcalGoal?.carbs_goal ?? null,
-          protein: totalProtein, proteinGoal: kcalGoal?.protein_goal ?? null,
-          fat: totalFat, fatGoal: kcalGoal?.fat_goal ?? null,
-          dayLabel: autoGoals.dayLabel
-        }
-      );
-    } catch (_) { /* non-critical */ }
+    );
     setSyncStatus(`Updated ${new Date().toLocaleTimeString()}`);
   } catch (error) {
     setSyncStatus(error.message, true);
