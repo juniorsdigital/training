@@ -1,6 +1,7 @@
 'use strict';
 
 const { intervalsAuthorizationValue } = require('./intervalsBasicAuth.js');
+const { buildBodyBattery } = require('./bodyBattery.js');
 
 const INTERVALS_BASE = 'https://intervals.icu/api/v1';
 
@@ -98,6 +99,43 @@ function summarizeActivity(a) {
   };
 }
 
+function pickNumberFromObject(obj, keys) {
+  if (!obj || typeof obj !== 'object') return null;
+  for (const key of keys) {
+    const n = Number(obj[key]);
+    if (!Number.isNaN(n) && Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function buildWellnessSignals(wellness) {
+  if (!wellness || typeof wellness !== 'object') return {};
+  const sleepSecs = pickNumberFromObject(wellness, [
+    'sleepSecs',
+    'sleepSec',
+    'sleep_seconds',
+    'sleepDuration',
+    'sleep_duration'
+  ]);
+  const sleepHoursRaw = pickNumberFromObject(wellness, ['sleepHours', 'sleep_hours']);
+  const sleepHours = sleepHoursRaw != null ? sleepHoursRaw : (sleepSecs != null ? sleepSecs / 3600 : null);
+
+  return {
+    sleepHours,
+    sleepSecs: sleepSecs != null ? sleepSecs : (sleepHours != null ? sleepHours * 3600 : null),
+    hrv: pickNumberFromObject(wellness, ['hrv', 'hrvMs', 'hrv_rmssd']),
+    restingHr: pickNumberFromObject(wellness, ['restingHr', 'resting_hr', 'rest_hr', 'rhr']),
+    readiness: pickNumberFromObject(wellness, ['readiness', 'readinessScore', 'recovery_score']),
+    stress: pickNumberFromObject(wellness, ['stress', 'stressScore', 'fatigue']),
+    sleepScore: pickNumberFromObject(wellness, ['sleepScore', 'sleep_score']),
+    recoveryScore: pickNumberFromObject(wellness, ['recovery', 'recoveryScore']),
+    atl: pickNumberFromObject(wellness, ['atl', 'acuteLoad', 'fatigueLoad']),
+    ctl: pickNumberFromObject(wellness, ['ctl', 'chronicLoad', 'fitnessLoad']),
+    tsb: pickNumberFromObject(wellness, ['tsb', 'form', 'freshness']),
+    raw: wellness
+  };
+}
+
 const CYCLING_TYPES = new Set([
   'Ride',
   'VirtualRide',
@@ -143,6 +181,47 @@ async function intervalsFetchJson(apiKey, path) {
 function asArray(data) {
   if (!data) return [];
   return Array.isArray(data) ? data : [];
+}
+
+function restUrl(path) {
+  return `${process.env.SUPABASE_URL}/rest/v1${path}`;
+}
+
+async function fetchNutritionSummary(localDate) {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) {
+    return { logs: [], goal: null, totalCalories: 0, totalCarbs: 0, totalProtein: 0, totalFat: 0 };
+  }
+
+  try {
+    const headers = {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json'
+    };
+    const [logsRes, goalsRes] = await Promise.all([
+      fetch(restUrl(`/nutrition_logs?log_date=eq.${localDate}&select=calories,carbs,protein,fat`), { headers }),
+      fetch(restUrl(`/nutrition_goals?log_date=eq.${localDate}&select=goal_calories,carbs_goal,protein_goal,fat_goal`), { headers })
+    ]);
+
+    if (!logsRes.ok || !goalsRes.ok) {
+      return { logs: [], goal: null, totalCalories: 0, totalCarbs: 0, totalProtein: 0, totalFat: 0 };
+    }
+
+    const logs = asArray(await logsRes.json());
+    const goals = asArray(await goalsRes.json());
+    return {
+      logs,
+      goal: goals[0] || null,
+      totalCalories: logs.reduce((sum, row) => sum + (Number(row.calories) || 0), 0),
+      totalCarbs: logs.reduce((sum, row) => sum + (Number(row.carbs) || 0), 0),
+      totalProtein: logs.reduce((sum, row) => sum + (Number(row.protein) || 0), 0),
+      totalFat: logs.reduce((sum, row) => sum + (Number(row.fat) || 0), 0)
+    };
+  } catch {
+    return { logs: [], goal: null, totalCalories: 0, totalCarbs: 0, totalProtein: 0, totalFat: 0 };
+  }
 }
 
 /**
@@ -233,6 +312,40 @@ async function buildDashboardOverviewPayload(localDate) {
     .filter((a) => activityLocalDay(a) === localDate)
     .map(summarizeActivity);
 
+  const oldestRecent = new Date(localDate);
+  oldestRecent.setDate(oldestRecent.getDate() - 14);
+  const oldestRecentStr = oldestRecent.toISOString().slice(0, 10);
+  const [wellnessHistoryRes, activityHistoryRes, nutrition] = await Promise.all([
+    intervalsFetchJson(intervalsApiKey, `/athlete/${athleteId}/wellness?oldest=${oldestRecentStr}&newest=${localDate}`),
+    intervalsFetchJson(intervalsApiKey, `/athlete/${athleteId}/activities?oldest=${oldestRecentStr}&newest=${localDate}&limit=250`),
+    fetchNutritionSummary(localDate)
+  ]);
+
+  const wellnessHistory = wellnessHistoryRes.ok ? asArray(wellnessHistoryRes.data) : [];
+  const normalizedWellness = buildWellnessSignals(wellness);
+  if (!wellnessHistoryRes.ok && wellnessHistoryRes.status !== 404) {
+    fetchErrors.wellnessHistory = wellnessHistoryRes.body || String(wellnessHistoryRes.status);
+  }
+
+  const activityHistory = (activityHistoryRes.ok ? asArray(activityHistoryRes.data) : activities)
+    .filter((a) => a && activityLocalDay(a) <= localDate)
+    .sort((a, b) => (String(b.start_date_local || b.start_date || '').localeCompare(String(a.start_date_local || a.start_date || ''))))
+    .map(summarizeActivity);
+  if (!activityHistoryRes.ok && activityHistoryRes.status !== 404) {
+    fetchErrors.activityHistory = activityHistoryRes.body || String(activityHistoryRes.status);
+  }
+
+  const bodyBattery = buildBodyBattery({
+    localDate,
+    vitals,
+    wellness: normalizedWellness,
+    wellnessHistory,
+    primaryActivity: primaryActivity ? summarizeActivity(primaryActivity) : null,
+    activityHistory,
+    eventsToday: events,
+    nutrition
+  });
+
   return {
     localDate,
     vitals,
@@ -246,6 +359,15 @@ async function buildDashboardOverviewPayload(localDate) {
     })),
     activitiesToday,
     primaryActivity: primaryActivity ? summarizeActivity(primaryActivity) : null,
+    wellnessSignals: normalizedWellness,
+    nutritionSummary: {
+      totalCalories: nutrition.totalCalories,
+      totalCarbs: nutrition.totalCarbs,
+      totalProtein: nutrition.totalProtein,
+      totalFat: nutrition.totalFat,
+      goal: nutrition.goal
+    },
+    bodyBattery,
     fetchErrors: Object.keys(fetchErrors).length ? fetchErrors : undefined
   };
 }

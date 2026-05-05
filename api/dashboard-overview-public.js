@@ -14,7 +14,28 @@ module.exports = async function handler(req, res) {
     }
 
     const payload = await buildDashboardOverviewPayload(localDate);
-    return res.status(200).json({ ok: true, ...payload });
+    const safeBodyBattery = payload.bodyBattery
+      ? {
+          dailyEnergy: {
+            score: payload.bodyBattery.dailyEnergy?.score ?? null,
+            status: payload.bodyBattery.dailyEnergy?.status ?? null,
+            confidence: payload.bodyBattery.dailyEnergy?.confidence ?? null,
+            topPositive: payload.bodyBattery.dailyEnergy?.topPositive ?? [],
+            topNegative: payload.bodyBattery.dailyEnergy?.topNegative ?? []
+          },
+          fitnessTrend: payload.bodyBattery.fitnessTrend || null
+        }
+      : null;
+    return res.status(200).json({
+      ok: true,
+      localDate: payload.localDate,
+      vitals: payload.vitals,
+      eventsToday: payload.eventsToday,
+      activitiesToday: payload.activitiesToday,
+      primaryActivity: payload.primaryActivity,
+      bodyBattery: safeBodyBattery,
+      fetchErrors: payload.fetchErrors
+    });
   } catch (error) {
     return res.status(500).json({ error: error.message || 'Unexpected server error.' });
   }

@@ -312,6 +312,18 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .home-vital{background:var(--surface2);border-radius:var(--radius-sm);padding:12px;text-align:center;border:1px solid var(--border)}
 .home-vital .hv-val{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text)}
 .home-vital .hv-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.battery-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+@media(max-width:700px){.battery-grid{grid-template-columns:1fr}}
+.battery-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px}
+.battery-score{font-size:24px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.battery-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.battery-pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700;margin-top:7px}
+.battery-pill.high{background:rgba(34,197,94,0.15);color:#4ade80}
+.battery-pill.moderate{background:rgba(234,179,8,0.15);color:#facc15}
+.battery-pill.low{background:rgba(239,68,68,0.15);color:#f87171}
+.battery-factors{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.battery-factor{display:flex;justify-content:space-between;gap:8px;font-size:11px;padding:3px 0}
+.battery-factor span:last-child{font-variant-numeric:tabular-nums;font-weight:700}
 .home-status{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:10px}
 .home-status.done{background:rgba(34,197,94,0.15);color:#4ade80}
 .home-status.pending{background:rgba(234,179,8,0.15);color:#facc15}
@@ -637,6 +649,23 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
               <div class="home-vital"><div class="hv-val" id="hvFtp">—</div><div class="hv-lbl">FTP</div></div>
               <div class="home-vital"><div class="hv-val" id="hvVo2">—</div><div class="hv-lbl">VO2max</div></div>
               <div class="home-vital"><div class="hv-val" id="hvWeight">—</div><div class="hv-lbl">Weight</div></div>
+            </div>
+            <div class="battery-grid">
+              <div class="battery-card">
+                <div class="battery-score" id="bbDailyScore">—</div>
+                <div class="battery-label">Daily Energy</div>
+                <div class="battery-pill moderate" id="bbDailyStatus">—</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:6px">Confidence <b id="bbConfidence">—</b></div>
+              </div>
+              <div class="battery-card">
+                <div class="battery-score" id="bbTrendScore">—</div>
+                <div class="battery-label">Fitness Trend</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:7px">Delta <b id="bbTrendDelta">—</b></div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">Direction <b id="bbTrendDir">—</b></div>
+              </div>
+            </div>
+            <div class="battery-factors" id="bbFactors">
+              <div class="battery-factor"><span>Body Battery factors will appear after sync.</span><span>—</span></div>
             </div>
             <div class="home-err" id="homeVitalsErr" style="display:none"></div>
           </div>
@@ -1083,6 +1112,55 @@ function applyVitalsToChrome(vitals) {
   }
 }
 
+function bodyBatteryPillClass(status) {
+  const s = (status || '').toLowerCase();
+  if (s === 'high') return 'battery-pill high';
+  if (s === 'low') return 'battery-pill low';
+  return 'battery-pill moderate';
+}
+
+function formatSignedNumber(value, suffix = '') {
+  if (value == null || Number.isNaN(value)) return '—';
+  const n = Number(value);
+  const abs = Math.abs(n);
+  const txt = Number.isInteger(abs) ? String(abs) : abs.toFixed(1);
+  if (n > 0) return `+${txt}${suffix}`;
+  if (n < 0) return `-${txt}${suffix}`;
+  return `0${suffix}`;
+}
+
+function renderBodyBattery(bodyBattery) {
+  const daily = bodyBattery?.dailyEnergy || {};
+  const trend = bodyBattery?.fitnessTrend || {};
+  const factorsEl = document.getElementById('bbFactors');
+
+  document.getElementById('bbDailyScore').textContent = daily.score != null ? `${Math.round(daily.score)}%` : '—';
+  const statusEl = document.getElementById('bbDailyStatus');
+  statusEl.textContent = daily.status || 'No data';
+  statusEl.className = bodyBatteryPillClass(daily.status);
+  document.getElementById('bbConfidence').textContent = daily.confidence != null ? `${Math.round(daily.confidence)}%` : '—';
+  document.getElementById('bbTrendScore').textContent = trend.score != null ? `${Math.round(trend.score)}%` : '—';
+  document.getElementById('bbTrendDelta').textContent = trend.delta != null ? formatSignedNumber(trend.delta, ' pts') : '—';
+  document.getElementById('bbTrendDir').textContent = trend.direction || '—';
+
+  const positives = Array.isArray(daily.topPositive) ? daily.topPositive : [];
+  const negatives = Array.isArray(daily.topNegative) ? daily.topNegative : [];
+  const rows = [];
+  positives.forEach((item) => {
+    rows.push(`<div class="battery-factor"><span>+ ${escapeHtml(item.label || item.key || 'Positive factor')}</span><span style="color:#4ade80">${formatSignedNumber(item.points)}</span></div>`);
+  });
+  negatives.forEach((item) => {
+    rows.push(`<div class="battery-factor"><span>- ${escapeHtml(item.label || item.key || 'Negative factor')}</span><span style="color:#f87171">${formatSignedNumber(item.points)}</span></div>`);
+  });
+  if (!rows.length) {
+    rows.push('<div class="battery-factor"><span>Not enough recovery/load data yet.</span><span>—</span></div>');
+  }
+  if (Array.isArray(daily.missing) && daily.missing.length) {
+    rows.push(`<div class="battery-factor"><span>Missing inputs</span><span>${escapeHtml(daily.missing.join(', '))}</span></div>`);
+  }
+  factorsEl.innerHTML = rows.join('');
+}
+
 function renderHomeOverview(apiData) {
   const errEl = document.getElementById('homeOverviewErr');
   errEl.style.display = 'none';
@@ -1115,6 +1193,7 @@ function renderHomeOverview(apiData) {
   } else {
     vErr.style.display = 'none';
   }
+  renderBodyBattery(apiData.bodyBattery);
 
   const schedEl = document.getElementById('homeScheduledBody');
   let schedHtml = '';
