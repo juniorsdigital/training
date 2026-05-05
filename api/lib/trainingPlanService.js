@@ -2,6 +2,10 @@
 
 const { requestJson, supabaseHeaders } = require('./supabaseRest.js');
 
+// #region agent log
+fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'379764'},body:JSON.stringify({sessionId:'379764',runId:'pre-fix',hypothesisId:'H3',location:'api/lib/trainingPlanService.js:5',message:'trainingPlanService module loaded',data:{exportFormatVersion:'1.0.0'},timestamp:Date.now()})}).catch(()=>{});
+// #endregion
+
 const EXPORT_FORMAT_VERSION = '1.0.0';
 
 function asIsoDate(value) {
