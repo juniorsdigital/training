@@ -1,7 +1,7 @@
 'use strict';
 
-const { authenticateRequest } = require('./lib/apiAuth.js');
-const { parseBody, upsertPlan, upsertPlanDay } = require('./lib/trainingPlanService.js');
+const { authenticateRequest } = require('../lib/apiAuth.js');
+const { parseBody, upsertPlan, upsertPlanDay } = require('../lib/trainingPlanService.js');
 
 function addDays(startDate, offset) {
   const d = new Date(`${startDate}T00:00:00Z`);

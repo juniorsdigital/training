@@ -1,6 +1,6 @@
 'use strict';
 
-const { assertAllowedEmail, verifySupabaseUser } = require('./lib/supabaseAuth.js');
+const { assertAllowedEmail, verifySupabaseUser } = require('../lib/supabaseAuth.js');
 
 function supabaseHeaders() {
   return {

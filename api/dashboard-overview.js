@@ -1,7 +1,7 @@
 'use strict';
 
-const { assertAllowedEmail, verifySupabaseUser } = require('./lib/supabaseAuth.js');
-const { buildDashboardOverviewPayload } = require('./lib/dashboardOverviewData.js');
+const { assertAllowedEmail, verifySupabaseUser } = require('../lib/supabaseAuth.js');
+const { buildDashboardOverviewPayload } = require('../lib/dashboardOverviewData.js');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {

@@ -1,5 +1,5 @@
-const { assertAllowedEmail, verifySupabaseUser } = require('./lib/supabaseAuth.js');
-const { fetchCompletedActivities } = require('./lib/workoutProviders.js');
+const { assertAllowedEmail, verifySupabaseUser } = require('../lib/supabaseAuth.js');
+const { fetchCompletedActivities } = require('../lib/workoutProviders.js');
 
 async function persistActivitiesToSupabase(activities, source) {
   const supabaseUrl = process.env.SUPABASE_URL;

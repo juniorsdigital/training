@@ -1,7 +1,7 @@
 'use strict';
 
-const { authenticateRequest } = require('./lib/apiAuth.js');
-const { parseBody, upsertPlanDay } = require('./lib/trainingPlanService.js');
+const { authenticateRequest } = require('../lib/apiAuth.js');
+const { parseBody, upsertPlanDay } = require('../lib/trainingPlanService.js');
 
 module.exports = async function handler(req, res) {
   const user = await authenticateRequest(req, res);
