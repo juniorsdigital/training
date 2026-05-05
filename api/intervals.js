@@ -1,34 +1,7 @@
 const { assertAllowedEmail, verifySupabaseUser } = require('./lib/supabaseAuth.js');
-const { intervalsAuthorizationValue } = require('./lib/intervalsBasicAuth.js');
+const { fetchCompletedActivities } = require('./lib/workoutProviders.js');
 
-const INTERVALS_BASE_URL = 'https://intervals.icu/api/v1';
-
-function formatYyyyMmDdUtc(d) {
-  return d.toISOString().slice(0, 10);
-}
-
-async function fetchIntervalsActivities(intervalsApiKey) {
-  const athleteId = process.env.INTERVALS_ATHLETE_ID || '0';
-  const newest = formatYyyyMmDdUtc(new Date());
-  const oldestDate = new Date();
-  oldestDate.setUTCDate(oldestDate.getUTCDate() - 365);
-  const oldest = formatYyyyMmDdUtc(oldestDate);
-  const activitiesUrl = `${INTERVALS_BASE_URL}/athlete/${athleteId}/activities?oldest=${oldest}&newest=${newest}&limit=500`;
-  const response = await fetch(activitiesUrl, {
-    headers: {
-      Authorization: intervalsAuthorizationValue(intervalsApiKey)
-    }
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Intervals.icu API error: ${text || response.status}`);
-  }
-
-  return response.json();
-}
-
-async function persistActivitiesToSupabase(activities) {
+async function persistActivitiesToSupabase(activities, source) {
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceRoleKey) {
@@ -40,6 +13,10 @@ async function persistActivitiesToSupabase(activities) {
     started_at: activity.start_date_local || activity.start_date || null,
     name: activity.name || null,
     type: activity.type || null,
+    avg_power: activity.average_power ?? null,
+    normalized_power: activity.normalized_power ?? activity.weighted_avg_power ?? null,
+    max_power: activity.max_power ?? null,
+    source: source || null,
     payload: activity
   }));
 
@@ -84,15 +61,10 @@ module.exports = async function handler(req, res) {
       return res.status(err.statusCode || 403).json({ error: err.message });
     }
 
-    const intervalsApiKey = process.env.INTERVALS_API_KEY;
-    if (!intervalsApiKey) {
-      return res.status(500).json({ error: 'Missing Intervals API key.' });
-    }
+    const { source, activities, providerErrors } = await fetchCompletedActivities();
+    const savedCount = await persistActivitiesToSupabase(Array.isArray(activities) ? activities : [], source);
 
-    const activities = await fetchIntervalsActivities(intervalsApiKey);
-    const savedCount = await persistActivitiesToSupabase(Array.isArray(activities) ? activities : []);
-
-    return res.status(200).json({ ok: true, savedCount });
+    return res.status(200).json({ ok: true, savedCount, source, providerErrors });
   } catch (error) {
     return res.status(500).json({ error: error.message || 'Unexpected server error.' });
   }

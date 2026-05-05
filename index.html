@@ -584,6 +584,9 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
       <div class="nav-item" data-panel="week">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>This Week
       </div>
+      <div class="nav-item" data-panel="plan-editor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>Plan Editor
+      </div>
       <div class="nav-sec">Reference</div>
       <div class="nav-item" data-panel="calendar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14" stroke-width="3" stroke-linecap="round"/><line x1="12" y1="14" x2="12" y2="14" stroke-width="3" stroke-linecap="round"/><line x1="16" y1="14" x2="16" y2="14" stroke-width="3" stroke-linecap="round"/></svg>Full Calendar
@@ -661,6 +664,53 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
         <div id="kcalOvBody"><div class="kcal-ov-empty">No calorie data logged yet.</div></div>
       </div>
       <div class="home-err" id="homeOverviewErr" style="display:none"></div>
+    </div>
+
+    <!-- PLAN EDITOR PANEL -->
+    <div class="panel" id="panel-plan-editor">
+      <div class="sec-title">Training Plan Editor</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Create/import new versions, update workouts, and manage granular day goals (wattage, heart rate, adaptation, etc.).</p>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-hdr"><span class="card-title">Plan Controls</span></div>
+        <div class="card-body" style="display:grid;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <select id="planSelect" style="min-width:240px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px"></select>
+            <button id="planRefreshBtn" class="kcal-add-btn" type="button">Refresh Plans</button>
+            <button id="planExportBtn" class="kcal-add-btn" type="button">Export Plan</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input id="planImportInput" type="file" accept="application/json" style="font-size:12px;color:var(--muted)">
+            <button id="planImportBtn" class="kcal-add-btn" type="button">Import + New Version</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input id="planNameInput" type="text" placeholder="Plan name" style="min-width:240px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
+            <input id="planStartInput" type="date" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
+            <button id="planCreateBtn" class="kcal-add-btn" type="button">Create Plan</button>
+          </div>
+          <div id="planEditorStatus" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Edit Workout Day</span></div>
+        <div class="card-body" style="display:grid;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input id="editWeekIndex" type="number" min="0" placeholder="Week index (0-based)" class="kcal-cal-input" style="width:170px;text-align:left">
+            <input id="editDayIndex" type="number" min="0" max="6" placeholder="Day index (0-6)" class="kcal-cal-input" style="width:140px;text-align:left">
+            <input id="editDayDate" type="date" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input id="editSessionType" type="text" placeholder="session_type (z2, ss, thr...)" style="min-width:200px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
+            <input id="editLabel" type="text" placeholder="Workout label" style="min-width:260px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
+            <input id="editTargetWatts" type="text" placeholder="Target watts label" style="min-width:180px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
+          </div>
+          <input id="editAmSession" type="text" placeholder="AM session" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
+          <input id="editPmSession" type="text" placeholder="PM session" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
+          <textarea id="editDetails" rows="4" placeholder="Workout details / short description" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;font-family:inherit"></textarea>
+          <textarea id="editGoalsJson" rows="5" placeholder='Goals JSON array, e.g. [{"goal_type":"goal_wattage","target_value":240,"unit":"W","notes":"Main set"}]' style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;font-family:monospace;font-size:11px"></textarea>
+          <div><button id="savePlanDayBtn" class="kcal-add-btn" type="button">Save Workout Day</button></div>
+        </div>
+      </div>
     </div>
 
     <!-- TODAY PANEL -->
@@ -1040,10 +1090,11 @@ function renderHomeOverview(apiData) {
 
   document.getElementById('homeDateStr').textContent = formatDateFull(today);
 
-  const wk = WEEKS[Math.max(0, Math.min(34, currentWeekIdx))];
+  const weeks = getWeeksData();
+  const wk = weeks[Math.max(0, Math.min(planWeekCount() - 1, currentWeekIdx))];
   const planDay = wk ? wk.days[currentDayIdx] : null;
   if (wk && planDay) {
-    document.getElementById('homeSubline').innerHTML = `${escapeHtml(wk.phase)} · Week ${wk.wk} of 35 · <span style="color:var(--text)">${escapeHtml(planDay.lbl)}</span>`;
+    document.getElementById('homeSubline').innerHTML = `${escapeHtml(wk.phase)} · Week ${wk.wk} of ${planWeekCount()} · <span style="color:var(--text)">${escapeHtml(planDay.lbl)}</span>`;
     const zc = Z_CSS[planDay.t] || 'bg-rest c-rest';
     const zl = Z_LABEL[planDay.t] || planDay.t;
     const badge = document.getElementById('homePlanBadge');
@@ -1242,7 +1293,8 @@ async function handleIntervalsSync() {
     if (!response.ok) {
       throw new Error(payload.error || 'Intervals sync failed.');
     }
-    setSyncStatus(`Synced ${payload.savedCount} activities · refreshing…`);
+    const sourceLabel = payload.source ? ` via ${payload.source}` : '';
+    setSyncStatus(`Synced ${payload.savedCount} activities${sourceLabel} · refreshing…`);
     await loadDashboardOverview();
   } catch (error) {
     setSyncStatus(error.message, true);
@@ -1679,6 +1731,58 @@ const WEEKS = [
 ]},
 ];
 
+let activePlan = null;
+let activeWeeks = WEEKS;
+
+function getWeeksData() {
+  return activeWeeks && activeWeeks.length ? activeWeeks : WEEKS;
+}
+
+function planWeekCount() {
+  return getWeeksData().length || 35;
+}
+
+function getPlanDay(weekIdx, dayIdx) {
+  const weeks = getWeeksData();
+  if (weekIdx < 0 || weekIdx >= weeks.length) return null;
+  const wk = weeks[weekIdx];
+  const day = wk?.days?.[dayIdx] || null;
+  return day ? { week: wk, day } : null;
+}
+
+function mapPlanApiToWeeks(plan) {
+  const buckets = new Map();
+  (plan?.days || []).forEach((d) => {
+    const weekNumber = Number(d.week_index) + 1;
+    if (!buckets.has(weekNumber)) {
+      buckets.set(weekNumber, {
+        wk: weekNumber,
+        phase: d.phase_label || `Plan Week ${weekNumber}`,
+        pCode: d.phase_code || '1',
+        tss: null,
+        days: new Array(7).fill(null)
+      });
+    }
+    const goalsText = (d.goals || [])
+      .map((g) => `${g.goal_type}${g.target_value != null ? `: ${g.target_value}${g.unit ? ` ${g.unit}` : ''}` : ''}${g.notes ? ` (${g.notes})` : ''}`)
+      .join(' | ');
+    buckets.get(weekNumber).days[Number(d.day_index)] = {
+      t: d.session_type || 'rest',
+      lbl: d.label || 'Workout',
+      det: [d.details, goalsText ? `Goals: ${goalsText}` : null].filter(Boolean).join('\n'),
+      w: d.target_watts_label || null,
+      am: d.am_session || null,
+      pm: d.pm_session || null
+    };
+  });
+  return Array.from(buckets.values())
+    .sort((a, b) => a.wk - b.wk)
+    .map((wk) => ({
+      ...wk,
+      days: wk.days.map((d) => d || { t: 'rest', lbl: 'REST', det: '', w: null, am: null, pm: null })
+    }));
+}
+
 // NUTRITION DATA
 const NUT_DATA = {
   rest: {
@@ -1749,7 +1853,8 @@ const NUT_GOALS = {
 
 // =================== HELPERS ===================
 function getDateForDay(weekIdx, dayIdx) {
-  const d = new Date(PLAN_START);
+  const base = activePlan?.start_date ? new Date(`${activePlan.start_date}T00:00:00`) : PLAN_START;
+  const d = new Date(base);
   d.setDate(d.getDate() + weekIdx * 7 + dayIdx);
   return d;
 }
@@ -1762,13 +1867,15 @@ function formatDateFull(d) {
 }
 function getWeekIdx(date) {
   const d = new Date(date); d.setHours(0,0,0,0);
-  const s = new Date(PLAN_START); s.setHours(0,0,0,0);
+  const base = activePlan?.start_date ? new Date(`${activePlan.start_date}T00:00:00`) : PLAN_START;
+  const s = new Date(base); s.setHours(0,0,0,0);
   const diff = Math.round((d - s) / 86400000);
   return Math.floor(diff / 7);
 }
 function getDayIdx(date) {
   const d = new Date(date); d.setHours(0,0,0,0);
-  const s = new Date(PLAN_START); s.setHours(0,0,0,0);
+  const base = activePlan?.start_date ? new Date(`${activePlan.start_date}T00:00:00`) : PLAN_START;
+  const s = new Date(base); s.setHours(0,0,0,0);
   const diff = Math.round((d - s) / 86400000);
   return diff % 7;
 }
@@ -1781,7 +1888,8 @@ function getAutoGoalsForDate(dateStr) {
   const d = new Date(dateStr); d.setHours(0,0,0,0);
   const weekIdx = getWeekIdx(d);
   const dayIdx = getDayIdx(d);
-  const wk = (weekIdx >= 0 && weekIdx < WEEKS.length) ? WEEKS[weekIdx] : null;
+  const weeks = getWeeksData();
+  const wk = (weekIdx >= 0 && weekIdx < weeks.length) ? weeks[weekIdx] : null;
   const day = wk ? wk.days[dayIdx] : null;
   const nutType = day ? getNutType(day.t) : 'rest';
   return { ...NUT_GOALS[nutType], nutType, dayLabel: NUT_DATA[nutType]?.name || 'Rest Day' };
@@ -1789,7 +1897,7 @@ function getAutoGoalsForDate(dateStr) {
 
 // =================== CURRENT STATE ===================
 const today = new Date(); today.setHours(0,0,0,0);
-let currentWeekIdx = Math.max(0, Math.min(34, getWeekIdx(today)));
+let currentWeekIdx = Math.max(0, Math.min(planWeekCount() - 1, getWeekIdx(today)));
 let currentDayIdx = getDayIdx(today);
 let viewWeekIdx = currentWeekIdx;
 
@@ -1797,7 +1905,8 @@ function renderPublicMinimal(apiData) {
   const dateEl = document.getElementById('publicDateStr');
   if (dateEl) dateEl.textContent = formatDateFull(today);
 
-  const wk = WEEKS[Math.max(0, Math.min(34, currentWeekIdx))];
+  const weeks = getWeeksData();
+  const wk = weeks[Math.max(0, Math.min(planWeekCount() - 1, currentWeekIdx))];
   const planDay = wk ? wk.days[currentDayIdx] : null;
   const planEl = document.getElementById('publicPlan');
   if (!planEl) return;
@@ -1912,12 +2021,13 @@ function renderZoneBars() {
 
 // =================== RENDER TODAY ===================
 function renderToday() {
-  const wk = WEEKS[currentWeekIdx];
+  const weeks = getWeeksData();
+  const wk = weeks[currentWeekIdx];
   const day = wk ? wk.days[currentDayIdx] : null;
   const dateStr = formatDateFull(today);
   document.getElementById('todayDateStr').textContent = dateStr;
 
-  if (!wk || currentWeekIdx < 0 || currentWeekIdx >= 35) {
+  if (!wk || currentWeekIdx < 0 || currentWeekIdx >= planWeekCount()) {
     document.getElementById('todayTitle').textContent = 'Outside Training Plan';
     document.getElementById('todayPhaseStr').textContent = 'Plan runs May 4 – Dec 28, 2026';
     document.getElementById('workoutBody').innerHTML = '<p style="color:var(--muted);font-size:12px">Today is outside the training plan period.</p>';
@@ -1926,12 +2036,12 @@ function renderToday() {
 
   const pColorVar = PHASE_COLORS[wk.pCode] || '--accent';
   document.getElementById('todayTitle').textContent = day.lbl;
-  document.getElementById('todayPhaseStr').textContent = `${wk.phase} · Week ${wk.wk} of 35`;
+  document.getElementById('todayPhaseStr').textContent = `${wk.phase} · Week ${wk.wk} of ${planWeekCount()}`;
   document.getElementById('hdrPhase').textContent = wk.phase;
   document.getElementById('hdrPhase').style.background = `var(${pColorVar}-bg, var(--accent-dim))`;
   document.getElementById('hdrPhase').style.color = `var(${pColorVar})`;
-  document.getElementById('progLbl').textContent = `Wk ${wk.wk}/35`;
-  document.getElementById('progFill').style.width = `${Math.round((wk.wk/35)*100)}%`;
+  document.getElementById('progLbl').textContent = `Wk ${wk.wk}/${planWeekCount()}`;
+  document.getElementById('progFill').style.width = `${Math.round((wk.wk / planWeekCount()) * 100)}%`;
 
   // Zone badge
   const zc = Z_CSS[day.t] || '';
@@ -2007,14 +2117,15 @@ function renderToday() {
 
 // =================== RENDER WEEK ===================
 function renderWeek() {
-  const wk = WEEKS[Math.max(0, Math.min(34, viewWeekIdx))];
+  const weeks = getWeeksData();
+  const wk = weeks[Math.max(0, Math.min(planWeekCount() - 1, viewWeekIdx))];
   if (!wk) return;
   document.getElementById('weekPanelTitle').textContent = `Week ${wk.wk} — ${wk.phase}`;
   const startD = getDateForDay(wk.wk-1, 0);
   const endD = getDateForDay(wk.wk-1, 6);
   document.getElementById('weekPanelDates').textContent = `${formatDate(startD)} – ${formatDate(endD)}, 2026`;
   document.getElementById('weekTSS').textContent = `~${wk.tss}`;
-  document.getElementById('wnavLbl').textContent = `${wk.wk}/35`;
+  document.getElementById('wnavLbl').textContent = `${wk.wk}/${planWeekCount()}`;
 
   const grid = document.getElementById('wdaysGrid');
   grid.innerHTML = DAYS_SHORT.map((dayName, i) => {
@@ -2043,7 +2154,7 @@ function renderWeek() {
 // =================== RENDER CALENDAR ===================
 function renderCalendar(filter='all', search='') {
   const tbody = document.getElementById('calBody');
-  const rows = WEEKS.filter(wk => {
+  const rows = getWeeksData().filter(wk => {
     if (filter !== 'all' && wk.pCode !== filter) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -2406,6 +2517,205 @@ function initCalorieTracker() {
   });
 }
 
+// =================== TRAINING PLAN CRUD ===================
+let planList = [];
+
+async function authedJsonFetch(url, options = {}) {
+  const session = await kcalGetSession();
+  if (!session) throw new Error('Not signed in.');
+  const headers = {
+    ...(options.headers || {}),
+    Authorization: `Bearer ${session.access_token}`
+  };
+  const response = await fetch(url, { ...options, headers });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || 'Request failed.');
+  return payload;
+}
+
+function setPlanEditorStatus(msg, isError = false) {
+  const el = document.getElementById('planEditorStatus');
+  if (!el) return;
+  el.style.color = isError ? 'var(--z5)' : 'var(--muted)';
+  el.textContent = msg || '';
+}
+
+function renderPlanSelect() {
+  const select = document.getElementById('planSelect');
+  if (!select) return;
+  if (!planList.length) {
+    select.innerHTML = '<option value="">No plans found</option>';
+    return;
+  }
+  select.innerHTML = planList.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (v${p.version || 1}, ${escapeHtml(p.status || 'draft')})</option>`).join('');
+  if (activePlan?.id) {
+    select.value = activePlan.id;
+  }
+}
+
+async function loadActivePlan(planId) {
+  const pickId = planId || activePlan?.id || planList[0]?.id || '';
+  if (!pickId) return;
+  const data = await authedJsonFetch(`/api/training-plans?id=${encodeURIComponent(pickId)}`);
+  activePlan = data.plan || null;
+  if (activePlan) {
+    const mapped = mapPlanApiToWeeks(activePlan);
+    if (mapped.length) {
+      activeWeeks = mapped;
+      currentWeekIdx = Math.max(0, Math.min(planWeekCount() - 1, getWeekIdx(today)));
+      viewWeekIdx = currentWeekIdx;
+      renderToday();
+      renderWeek();
+      renderCalendar();
+    }
+  }
+}
+
+async function refreshPlansAndActive() {
+  const data = await authedJsonFetch('/api/training-plans');
+  planList = data.plans || [];
+  renderPlanSelect();
+  await loadActivePlan();
+}
+
+async function createTrainingPlan() {
+  const name = document.getElementById('planNameInput').value.trim();
+  const startDate = document.getElementById('planStartInput').value;
+  if (!name || !startDate) {
+    setPlanEditorStatus('Plan name and start date are required.', true);
+    return;
+  }
+  const payload = await authedJsonFetch('/api/training-plans', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      start_date: startDate,
+      status: 'draft',
+      version: 1,
+      total_weeks: planWeekCount(),
+      source: 'manual'
+    })
+  });
+  setPlanEditorStatus(`Created plan: ${payload.plan?.name || name}`);
+  await refreshPlansAndActive();
+}
+
+async function saveTrainingPlanDay() {
+  if (!activePlan?.id) throw new Error('Select an active plan first.');
+  const goalsText = document.getElementById('editGoalsJson').value.trim();
+  let goals = [];
+  if (goalsText) goals = JSON.parse(goalsText);
+  const payload = {
+    week_index: Number(document.getElementById('editWeekIndex').value),
+    day_index: Number(document.getElementById('editDayIndex').value),
+    day_date: document.getElementById('editDayDate').value,
+    session_type: document.getElementById('editSessionType').value.trim(),
+    label: document.getElementById('editLabel').value.trim(),
+    target_watts_label: document.getElementById('editTargetWatts').value.trim(),
+    am_session: document.getElementById('editAmSession').value.trim(),
+    pm_session: document.getElementById('editPmSession').value.trim(),
+    details: document.getElementById('editDetails').value.trim(),
+    goals: Array.isArray(goals) ? goals : []
+  };
+  await authedJsonFetch(`/api/training-plan-days?planId=${encodeURIComponent(activePlan.id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  setPlanEditorStatus('Workout day saved.');
+  await loadActivePlan(activePlan.id);
+}
+
+async function exportTrainingPlan() {
+  if (!activePlan?.id) throw new Error('Select an active plan first.');
+  const session = await kcalGetSession();
+  if (!session) throw new Error('Not signed in.');
+  const response = await fetch(`/api/training-plans?id=${encodeURIComponent(activePlan.id)}&mode=export`, {
+    headers: { Authorization: `Bearer ${session.access_token}` }
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.error || 'Failed to export plan.');
+  }
+  const content = await response.text();
+  const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `training-plan-${activePlan.id}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  setPlanEditorStatus('Plan export complete.');
+}
+
+async function importTrainingPlanFile() {
+  const input = document.getElementById('planImportInput');
+  const file = input.files?.[0];
+  if (!file) {
+    setPlanEditorStatus('Choose an exported plan JSON file first.', true);
+    return;
+  }
+  const text = await file.text();
+  const body = JSON.parse(text);
+  await authedJsonFetch('/api/training-plan-import', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  setPlanEditorStatus('Imported plan as a new version.');
+  await refreshPlansAndActive();
+}
+
+function initPlanEditor() {
+  const panel = document.getElementById('panel-plan-editor');
+  if (!panel) return;
+  document.getElementById('planRefreshBtn').addEventListener('click', async () => {
+    try {
+      await refreshPlansAndActive();
+      setPlanEditorStatus('Plans refreshed.');
+    } catch (error) {
+      setPlanEditorStatus(error.message, true);
+    }
+  });
+  document.getElementById('planSelect').addEventListener('change', async (e) => {
+    try {
+      await loadActivePlan(e.target.value);
+      setPlanEditorStatus('Loaded selected plan.');
+    } catch (error) {
+      setPlanEditorStatus(error.message, true);
+    }
+  });
+  document.getElementById('planCreateBtn').addEventListener('click', async () => {
+    try {
+      await createTrainingPlan();
+    } catch (error) {
+      setPlanEditorStatus(error.message, true);
+    }
+  });
+  document.getElementById('savePlanDayBtn').addEventListener('click', async () => {
+    try {
+      await saveTrainingPlanDay();
+    } catch (error) {
+      setPlanEditorStatus(error.message, true);
+    }
+  });
+  document.getElementById('planExportBtn').addEventListener('click', async () => {
+    try {
+      await exportTrainingPlan();
+    } catch (error) {
+      setPlanEditorStatus(error.message, true);
+    }
+  });
+  document.getElementById('planImportBtn').addEventListener('click', async () => {
+    try {
+      await importTrainingPlanFile();
+    } catch (error) {
+      setPlanEditorStatus(error.message, true);
+    }
+  });
+}
+
 // =================== NAVIGATION ===================
 function navigateToPanel(panel) {
   document.querySelectorAll('.nav-item').forEach(n => {
@@ -2418,6 +2728,7 @@ function navigateToPanel(panel) {
   if (panel === 'calendar') renderCalendar();
   if (panel === 'zones') renderZoneBars();
   if (panel === 'nutrition') { renderNutPanel('rest'); loadNutritionTracker(); }
+  if (panel === 'plan-editor') refreshPlansAndActive().catch(() => {});
   // Close sidebar on mobile after navigation
   closeSidebar();
   window.scrollTo(0, 0);
@@ -2462,7 +2773,7 @@ document.getElementById('prevWkBtn').addEventListener('click', () => {
   if (viewWeekIdx > 0) { viewWeekIdx--; renderWeek(); }
 });
 document.getElementById('nextWkBtn').addEventListener('click', () => {
-  if (viewWeekIdx < 34) { viewWeekIdx++; renderWeek(); }
+  if (viewWeekIdx < (planWeekCount() - 1)) { viewWeekIdx++; renderWeek(); }
 });
 
 // Calendar filter
@@ -2511,10 +2822,12 @@ if (publicThemeBtn) publicThemeBtn.addEventListener('click', toggleTheme);
 
 // =================== INIT ===================
 async function initApp() {
+  initPlanEditor();
   const { loggedIn } = await initAuthPortal();
   if (loggedIn) {
     setViewMode('full');
     initCalorieTracker();
+    await refreshPlansAndActive().catch(() => {});
     renderToday();
     renderWeek();
     renderZoneBars();
