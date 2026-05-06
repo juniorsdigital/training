@@ -5,7 +5,7 @@ const {
   mapPlanToLegacyWeeks,
   buildExportDocument,
   EXPORT_FORMAT_VERSION
-} = require('../api/lib/trainingPlanService.js');
+} = require('../lib/trainingPlanService.js');
 
 function run() {
   const plan = {
@@ -39,6 +39,8 @@ function run() {
   const exported = buildExportDocument(plan);
   assert.strictEqual(exported.documentation.format_version, EXPORT_FORMAT_VERSION, 'includes format version');
   assert.ok(Array.isArray(exported.documentation.import_validation_rules), 'includes validation rules');
+  assert.strictEqual(exported.documentation.import_mode, 'overwrite-canonical', 'documents overwrite import mode');
+  assert.ok(Array.isArray(exported.documentation.import_notes), 'includes import overwrite notes');
   assert.strictEqual(exported.plan.name, 'Test Plan', 'contains plan payload');
 
   console.log('training-plan-service tests: PASS');

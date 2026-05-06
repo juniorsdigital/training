@@ -36,12 +36,14 @@ If Garmin is unavailable/unconfigured, sync falls back to Intervals automaticall
 ## 4) Validate the full flow
 
 - Plan management:
-  - create/select plan in **Plan Editor**
-  - edit and save a workout day with goals JSON
-  - verify Today/Week/Calendar reflect changes
+  - open **Plan Editor** and confirm canonical plan loads
+  - click **Export Canonical Plan** and verify file downloads
+  - edit exported JSON offline and import it with **Import and Overwrite Plan**
+  - verify Today/Week/Calendar reflect imported plan updates
 - Export/import:
   - export a plan and inspect top-level `documentation` section
-  - import exported file as a new version
+  - confirm `documentation.import_mode` is `overwrite-canonical`
+  - import exported file and confirm canonical plan version increments
 - Workout sync:
   - trigger **Sync to DB**
   - verify response source (`garmin` or `intervals`)

@@ -697,47 +697,32 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 
     <!-- PLAN EDITOR PANEL -->
     <div class="panel" id="panel-plan-editor">
-      <div class="sec-title">Training Plan Editor</div>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Create/import new versions, update workouts, and manage granular day goals (wattage, heart rate, adaptation, etc.).</p>
+      <div class="sec-title">Training Plan Import/Export</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Manage one canonical site plan by exporting it for offline edits, then importing a revised file to overwrite the current plan.</p>
       <div class="card" style="margin-bottom:12px">
-        <div class="card-hdr"><span class="card-title">Plan Controls</span></div>
+        <div class="card-hdr"><span class="card-title">Plan File Operations</span></div>
         <div class="card-body" style="display:grid;gap:8px">
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <select id="planSelect" style="min-width:240px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px"></select>
-            <button id="planRefreshBtn" class="kcal-add-btn" type="button">Refresh Plans</button>
-            <button id="planExportBtn" class="kcal-add-btn" type="button">Export Plan</button>
+            <button id="planRefreshBtn" class="kcal-add-btn" type="button">Refresh Canonical Plan</button>
+            <button id="planExportBtn" class="kcal-add-btn" type="button">Export Canonical Plan</button>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <input id="planImportInput" type="file" accept="application/json" style="font-size:12px;color:var(--muted)">
-            <button id="planImportBtn" class="kcal-add-btn" type="button">Import + New Version</button>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <input id="planNameInput" type="text" placeholder="Plan name" style="min-width:240px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
-            <input id="planStartInput" type="date" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
-            <button id="planCreateBtn" class="kcal-add-btn" type="button">Create Plan</button>
+            <button id="planImportBtn" class="kcal-add-btn" type="button">Import and Overwrite Plan</button>
           </div>
           <div id="planEditorStatus" style="font-size:11px;color:var(--muted)"></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-hdr"><span class="card-title">Edit Workout Day</span></div>
+        <div class="card-hdr"><span class="card-title">Documentation</span></div>
         <div class="card-body" style="display:grid;gap:8px">
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <input id="editWeekIndex" type="number" min="0" placeholder="Week index (0-based)" class="kcal-cal-input" style="width:170px;text-align:left">
-            <input id="editDayIndex" type="number" min="0" max="6" placeholder="Day index (0-6)" class="kcal-cal-input" style="width:140px;text-align:left">
-            <input id="editDayDate" type="date" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
+          <div style="font-size:12px;color:var(--muted);line-height:1.55">
+            <div><b>Workflow:</b> Export the canonical plan, edit the JSON file offline, then import it to replace the website plan in full.</div>
+            <div><b>Expected JSON:</b> The file must include `plan.name`, `plan.start_date`, and `plan.days` entries with `week_index`, `day_index`, `day_date`, `session_type`, and `label`.</div>
+            <div><b>Overwrite behavior:</b> Import updates canonical plan metadata and replaces all existing day/goals records with the file contents.</div>
+            <div><b>Tip:</b> Start from an exported file to preserve correct shape and documentation metadata.</div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <input id="editSessionType" type="text" placeholder="session_type (z2, ss, thr...)" style="min-width:200px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
-            <input id="editLabel" type="text" placeholder="Workout label" style="min-width:260px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
-            <input id="editTargetWatts" type="text" placeholder="Target watts label" style="min-width:180px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
-          </div>
-          <input id="editAmSession" type="text" placeholder="AM session" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
-          <input id="editPmSession" type="text" placeholder="PM session" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px">
-          <textarea id="editDetails" rows="4" placeholder="Workout details / short description" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;font-family:inherit"></textarea>
-          <textarea id="editGoalsJson" rows="5" placeholder='Goals JSON array, e.g. [{"goal_type":"goal_wattage","target_value":240,"unit":"W","notes":"Main set"}]' style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;font-family:monospace;font-size:11px"></textarea>
-          <div><button id="savePlanDayBtn" class="kcal-add-btn" type="button">Save Workout Day</button></div>
         </div>
       </div>
     </div>
@@ -2615,8 +2600,7 @@ function initCalorieTracker() {
   });
 }
 
-// =================== TRAINING PLAN CRUD ===================
-let planList = [];
+// =================== TRAINING PLAN IMPORT/EXPORT ===================
 
 async function authedJsonFetch(url, options = {}) {
   const session = await kcalGetSession();
@@ -2638,24 +2622,13 @@ function setPlanEditorStatus(msg, isError = false) {
   el.textContent = msg || '';
 }
 
-function renderPlanSelect() {
-  const select = document.getElementById('planSelect');
-  if (!select) return;
-  if (!planList.length) {
-    select.innerHTML = '<option value="">No plans found</option>';
+async function loadCanonicalPlan() {
+  const data = await authedJsonFetch('/api/training-plans?mode=canonical');
+  activePlan = data.plan || null;
+  if (!activePlan) {
+    setPlanEditorStatus('No canonical plan exists yet. Import a plan file to create one.');
     return;
   }
-  select.innerHTML = planList.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (v${p.version || 1}, ${escapeHtml(p.status || 'draft')})</option>`).join('');
-  if (activePlan?.id) {
-    select.value = activePlan.id;
-  }
-}
-
-async function loadActivePlan(planId) {
-  const pickId = planId || activePlan?.id || planList[0]?.id || '';
-  if (!pickId) return;
-  const data = await authedJsonFetch(`/api/training-plans?id=${encodeURIComponent(pickId)}`);
-  activePlan = data.plan || null;
   if (activePlan) {
     const mapped = mapPlanApiToWeeks(activePlan);
     if (mapped.length) {
@@ -2669,67 +2642,17 @@ async function loadActivePlan(planId) {
   }
 }
 
-async function refreshPlansAndActive() {
-  const data = await authedJsonFetch('/api/training-plans');
-  planList = data.plans || [];
-  renderPlanSelect();
-  await loadActivePlan();
-}
-
-async function createTrainingPlan() {
-  const name = document.getElementById('planNameInput').value.trim();
-  const startDate = document.getElementById('planStartInput').value;
-  if (!name || !startDate) {
-    setPlanEditorStatus('Plan name and start date are required.', true);
-    return;
+async function refreshCanonicalPlan() {
+  await loadCanonicalPlan();
+  if (activePlan?.id) {
+    setPlanEditorStatus(`Loaded canonical plan: ${activePlan.name} (v${activePlan.version || 1}).`);
   }
-  const payload = await authedJsonFetch('/api/training-plans', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name,
-      start_date: startDate,
-      status: 'draft',
-      version: 1,
-      total_weeks: planWeekCount(),
-      source: 'manual'
-    })
-  });
-  setPlanEditorStatus(`Created plan: ${payload.plan?.name || name}`);
-  await refreshPlansAndActive();
-}
-
-async function saveTrainingPlanDay() {
-  if (!activePlan?.id) throw new Error('Select an active plan first.');
-  const goalsText = document.getElementById('editGoalsJson').value.trim();
-  let goals = [];
-  if (goalsText) goals = JSON.parse(goalsText);
-  const payload = {
-    week_index: Number(document.getElementById('editWeekIndex').value),
-    day_index: Number(document.getElementById('editDayIndex').value),
-    day_date: document.getElementById('editDayDate').value,
-    session_type: document.getElementById('editSessionType').value.trim(),
-    label: document.getElementById('editLabel').value.trim(),
-    target_watts_label: document.getElementById('editTargetWatts').value.trim(),
-    am_session: document.getElementById('editAmSession').value.trim(),
-    pm_session: document.getElementById('editPmSession').value.trim(),
-    details: document.getElementById('editDetails').value.trim(),
-    goals: Array.isArray(goals) ? goals : []
-  };
-  await authedJsonFetch(`/api/training-plan-days?planId=${encodeURIComponent(activePlan.id)}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  setPlanEditorStatus('Workout day saved.');
-  await loadActivePlan(activePlan.id);
 }
 
 async function exportTrainingPlan() {
-  if (!activePlan?.id) throw new Error('Select an active plan first.');
   const session = await kcalGetSession();
   if (!session) throw new Error('Not signed in.');
-  const response = await fetch(`/api/training-plans?id=${encodeURIComponent(activePlan.id)}&mode=export`, {
+  const response = await fetch('/api/training-plans?mode=export', {
     headers: { Authorization: `Bearer ${session.access_token}` }
   });
   if (!response.ok) {
@@ -2741,10 +2664,10 @@ async function exportTrainingPlan() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `training-plan-${activePlan.id}.json`;
+  a.download = `training-plan-${activePlan?.id || 'canonical'}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  setPlanEditorStatus('Plan export complete.');
+  setPlanEditorStatus('Canonical plan export complete.');
 }
 
 async function importTrainingPlanFile() {
@@ -2761,8 +2684,8 @@ async function importTrainingPlanFile() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-  setPlanEditorStatus('Imported plan as a new version.');
-  await refreshPlansAndActive();
+  setPlanEditorStatus('Import complete. Canonical plan overwritten.');
+  await refreshCanonicalPlan();
 }
 
 function initPlanEditor() {
@@ -2770,30 +2693,7 @@ function initPlanEditor() {
   if (!panel) return;
   document.getElementById('planRefreshBtn').addEventListener('click', async () => {
     try {
-      await refreshPlansAndActive();
-      setPlanEditorStatus('Plans refreshed.');
-    } catch (error) {
-      setPlanEditorStatus(error.message, true);
-    }
-  });
-  document.getElementById('planSelect').addEventListener('change', async (e) => {
-    try {
-      await loadActivePlan(e.target.value);
-      setPlanEditorStatus('Loaded selected plan.');
-    } catch (error) {
-      setPlanEditorStatus(error.message, true);
-    }
-  });
-  document.getElementById('planCreateBtn').addEventListener('click', async () => {
-    try {
-      await createTrainingPlan();
-    } catch (error) {
-      setPlanEditorStatus(error.message, true);
-    }
-  });
-  document.getElementById('savePlanDayBtn').addEventListener('click', async () => {
-    try {
-      await saveTrainingPlanDay();
+      await refreshCanonicalPlan();
     } catch (error) {
       setPlanEditorStatus(error.message, true);
     }
@@ -2826,7 +2726,7 @@ function navigateToPanel(panel) {
   if (panel === 'calendar') renderCalendar();
   if (panel === 'zones') renderZoneBars();
   if (panel === 'nutrition') { renderNutPanel('rest'); loadNutritionTracker(); }
-  if (panel === 'plan-editor') refreshPlansAndActive().catch(() => {});
+  if (panel === 'plan-editor') refreshCanonicalPlan().catch(() => {});
   // Close sidebar on mobile after navigation
   closeSidebar();
   window.scrollTo(0, 0);
@@ -2925,7 +2825,7 @@ async function initApp() {
   if (loggedIn) {
     setViewMode('full');
     initCalorieTracker();
-    await refreshPlansAndActive().catch(() => {});
+    await refreshCanonicalPlan().catch(() => {});
     renderToday();
     renderWeek();
     renderZoneBars();

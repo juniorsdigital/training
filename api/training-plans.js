@@ -5,6 +5,7 @@ const {
   parseBody,
   listPlans,
   getPlanById,
+  getCanonicalPlan,
   upsertPlan,
   buildExportDocument,
   mapPlanToLegacyWeeks
@@ -18,22 +19,27 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       const id = (req.query.id || '').toString().trim();
       const mode = (req.query.mode || '').toString().trim();
-      if (!id) {
+      if (mode === 'list') {
         const plans = await listPlans();
         return res.status(200).json({ ok: true, plans });
       }
-      const plan = await getPlanById(id);
-      if (!plan) return res.status(404).json({ error: 'Plan not found.' });
+
+      const selectedPlan = id ? await getPlanById(id) : await getCanonicalPlan();
+      if (!selectedPlan) {
+        if (mode === 'export') return res.status(404).json({ error: 'No canonical plan found.' });
+        if (mode === 'legacy-weeks') return res.status(200).json({ ok: true, weeks: [], plan: null });
+        return res.status(200).json({ ok: true, plan: null });
+      }
       if (mode === 'export') {
-        const body = buildExportDocument(plan);
+        const body = buildExportDocument(selectedPlan);
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.setHeader('Content-Disposition', `attachment; filename="training-plan-${id}.json"`);
+        res.setHeader('Content-Disposition', `attachment; filename="training-plan-${selectedPlan.id}.json"`);
         return res.status(200).send(JSON.stringify(body, null, 2));
       }
       if (mode === 'legacy-weeks') {
-        return res.status(200).json({ ok: true, weeks: mapPlanToLegacyWeeks(plan), plan });
+        return res.status(200).json({ ok: true, weeks: mapPlanToLegacyWeeks(selectedPlan), plan: selectedPlan });
       }
-      return res.status(200).json({ ok: true, plan });
+      return res.status(200).json({ ok: true, plan: selectedPlan });
     }
 
     if (req.method === 'POST') {
