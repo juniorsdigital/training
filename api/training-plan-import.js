@@ -2,6 +2,7 @@
 
 const { authenticateRequest } = require('../lib/apiAuth.js');
 const { parseBody, overwriteCanonicalPlan } = require('../lib/trainingPlanService.js');
+const { parsePlanCsv } = require('../lib/trainingPlanCsv.js');
 
 module.exports = async function handler(req, res) {
   const user = await authenticateRequest(req, res);
@@ -12,8 +13,13 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const body = parseBody(req);
-    const incoming = body.plan || body;
+    const contentType = String(req.headers['content-type'] || '').toLowerCase();
+    const incoming = contentType.includes('text/csv')
+      ? parsePlanCsv(typeof req.body === 'string' ? req.body : '')
+      : (() => {
+        const body = parseBody(req);
+        return body.plan || body;
+      })();
     if (!incoming.name || !incoming.start_date) {
       return res.status(400).json({ error: 'plan.name and plan.start_date are required.' });
     }

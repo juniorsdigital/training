@@ -10,6 +10,7 @@ const {
   buildExportDocument,
   mapPlanToLegacyWeeks
 } = require('../lib/trainingPlanService.js');
+const { serializePlanToCsv, templateCsvFromPlan } = require('../lib/trainingPlanCsv.js');
 
 module.exports = async function handler(req, res) {
   const user = await authenticateRequest(req, res);
@@ -27,14 +28,33 @@ module.exports = async function handler(req, res) {
       const selectedPlan = id ? await getPlanById(id) : await getCanonicalPlan();
       if (!selectedPlan) {
         if (mode === 'export') return res.status(404).json({ error: 'No canonical plan found.' });
+        if (mode === 'template-csv') {
+          const content = templateCsvFromPlan(null);
+          res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+          res.setHeader('Content-Disposition', 'attachment; filename="training-plan-template.csv"');
+          return res.status(200).send(content);
+        }
         if (mode === 'legacy-weeks') return res.status(200).json({ ok: true, weeks: [], plan: null });
         return res.status(200).json({ ok: true, plan: null });
       }
       if (mode === 'export') {
+        const format = (req.query.format || 'json').toString().trim().toLowerCase();
+        if (format === 'csv') {
+          const content = serializePlanToCsv(selectedPlan);
+          res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+          res.setHeader('Content-Disposition', `attachment; filename="training-plan-${selectedPlan.id}.csv"`);
+          return res.status(200).send(content);
+        }
         const body = buildExportDocument(selectedPlan);
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.setHeader('Content-Disposition', `attachment; filename="training-plan-${selectedPlan.id}.json"`);
         return res.status(200).send(JSON.stringify(body, null, 2));
+      }
+      if (mode === 'template-csv') {
+        const content = templateCsvFromPlan(selectedPlan);
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="training-plan-template-${selectedPlan.id}.csv"`);
+        return res.status(200).send(content);
       }
       if (mode === 'legacy-weeks') {
         return res.status(200).json({ ok: true, weeks: mapPlanToLegacyWeeks(selectedPlan), plan: selectedPlan });

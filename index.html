@@ -704,10 +704,11 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
         <div class="card-body" style="display:grid;gap:8px">
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <button id="planRefreshBtn" class="kcal-add-btn" type="button">Refresh Canonical Plan</button>
-            <button id="planExportBtn" class="kcal-add-btn" type="button">Export Canonical Plan</button>
+            <button id="planExportBtn" class="kcal-add-btn" type="button">Export Canonical CSV</button>
+            <button id="planTemplateBtn" class="kcal-add-btn" type="button">Download Template CSV</button>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <input id="planImportInput" type="file" accept="application/json" style="font-size:12px;color:var(--muted)">
+            <input id="planImportInput" type="file" accept=".csv,application/json,text/csv" style="font-size:12px;color:var(--muted)">
             <button id="planImportBtn" class="kcal-add-btn" type="button">Import and Overwrite Plan</button>
           </div>
           <div id="planEditorStatus" style="font-size:11px;color:var(--muted)"></div>
@@ -718,10 +719,10 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
         <div class="card-hdr"><span class="card-title">Documentation</span></div>
         <div class="card-body" style="display:grid;gap:8px">
           <div style="font-size:12px;color:var(--muted);line-height:1.55">
-            <div><b>Workflow:</b> Export the canonical plan, edit the JSON file offline, then import it to replace the website plan in full.</div>
-            <div><b>Expected JSON:</b> The file must include `plan.name`, `plan.start_date`, and `plan.days` entries with `week_index`, `day_index`, `day_date`, `session_type`, and `label`.</div>
+            <div><b>Workflow:</b> Export/download a CSV template, edit the file offline, then import it to replace the website plan in full.</div>
+            <div><b>Expected CSV:</b> Include `plan_name`, `start_date`, `week_index`, `day_index`, `day_date`, `session_type`, and `label` columns. Optional goals go in `goals_json`.</div>
             <div><b>Overwrite behavior:</b> Import updates canonical plan metadata and replaces all existing day/goals records with the file contents.</div>
-            <div><b>Tip:</b> Start from an exported file to preserve correct shape and documentation metadata.</div>
+            <div><b>Tip:</b> Start from the template CSV to preserve the expected schema.</div>
           </div>
         </div>
       </div>
@@ -2694,7 +2695,7 @@ async function refreshCanonicalPlan() {
 async function exportTrainingPlan() {
   const session = await kcalGetSession();
   if (!session) throw new Error('Not signed in.');
-  const response = await fetch('/api/training-plans?mode=export', {
+  const response = await fetch('/api/training-plans?mode=export&format=csv', {
     headers: { Authorization: `Bearer ${session.access_token}` }
   });
   if (!response.ok) {
@@ -2702,30 +2703,60 @@ async function exportTrainingPlan() {
     throw new Error(payload.error || 'Failed to export plan.');
   }
   const content = await response.text();
-  const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `training-plan-${activePlan?.id || 'canonical'}.json`;
+  a.download = `training-plan-${activePlan?.id || 'canonical'}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-  setPlanEditorStatus('Canonical plan export complete.');
+  setPlanEditorStatus('Canonical CSV export complete.');
+}
+
+async function downloadTrainingPlanTemplate() {
+  const session = await kcalGetSession();
+  if (!session) throw new Error('Not signed in.');
+  const response = await fetch('/api/training-plans?mode=template-csv', {
+    headers: { Authorization: `Bearer ${session.access_token}` }
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.error || 'Failed to download template CSV.');
+  }
+  const content = await response.text();
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `training-plan-template-${activePlan?.id || 'canonical'}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  setPlanEditorStatus('Template CSV downloaded.');
 }
 
 async function importTrainingPlanFile() {
   const input = document.getElementById('planImportInput');
   const file = input.files?.[0];
   if (!file) {
-    setPlanEditorStatus('Choose an exported plan JSON file first.', true);
+    setPlanEditorStatus('Choose a training plan CSV file first.', true);
     return;
   }
   const text = await file.text();
-  const body = JSON.parse(text);
-  await authedJsonFetch('/api/training-plan-import', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
+  const isCsv = /\.csv$/i.test(file.name) || String(file.type || '').includes('csv');
+  if (isCsv) {
+    await authedJsonFetch('/api/training-plan-import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/csv' },
+      body: text
+    });
+  } else {
+    const body = JSON.parse(text);
+    await authedJsonFetch('/api/training-plan-import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  }
   setPlanEditorStatus('Import complete. Canonical plan overwritten.');
   await refreshCanonicalPlan();
 }
@@ -2743,6 +2774,13 @@ function initPlanEditor() {
   document.getElementById('planExportBtn').addEventListener('click', async () => {
     try {
       await exportTrainingPlan();
+    } catch (error) {
+      setPlanEditorStatus(error.message, true);
+    }
+  });
+  document.getElementById('planTemplateBtn').addEventListener('click', async () => {
+    try {
+      await downloadTrainingPlanTemplate();
     } catch (error) {
       setPlanEditorStatus(error.message, true);
     }
