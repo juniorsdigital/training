@@ -2757,6 +2757,8 @@ function initPlanEditor() {
 }
 
 // =================== NAVIGATION ===================
+const TRAINING_APP_ACTIVE_PANEL_KEY = 'trainingAppActivePanel';
+
 function navigateToPanel(panel) {
   document.querySelectorAll('.nav-item').forEach(n => {
     n.classList.toggle('active', n.dataset.panel === panel);
@@ -2764,6 +2766,11 @@ function navigateToPanel(panel) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('panel-' + panel);
   if (target) target.classList.add('active');
+  if (target) {
+    try {
+      localStorage.setItem(TRAINING_APP_ACTIVE_PANEL_KEY, panel);
+    } catch (e) { /* ignore quota / private mode */ }
+  }
   if (panel === 'home') loadDashboardOverview();
   if (panel === 'calendar') renderCalendar();
   if (panel === 'zones') renderZoneBars();
@@ -2772,6 +2779,22 @@ function navigateToPanel(panel) {
   // Close sidebar on mobile after navigation
   closeSidebar();
   window.scrollTo(0, 0);
+}
+
+function restoreLastActivePanel() {
+  let saved = null;
+  try {
+    saved = localStorage.getItem(TRAINING_APP_ACTIVE_PANEL_KEY);
+  } catch (e) {
+    return;
+  }
+  if (!saved || saved === 'home') return;
+  const allowed = new Set(
+    Array.from(document.querySelectorAll('.nav-item[data-panel]')).map((n) => n.dataset.panel)
+  );
+  if (!allowed.has(saved)) return;
+  if (!document.getElementById('panel-' + saved)) return;
+  navigateToPanel(saved);
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {
@@ -2872,6 +2895,7 @@ async function initApp() {
     renderWeek();
     renderZoneBars();
     await loadDashboardOverview();
+    restoreLastActivePanel();
   } else {
     setViewMode('public');
     await loadPublicOverview();

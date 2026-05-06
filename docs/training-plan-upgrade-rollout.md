@@ -21,6 +21,24 @@
   - `start_date` (default `2026-05-04`)
   - `weeks` (legacy `WEEKS` array payload)
 
+### 2b) Canonical export file from embedded `WEEKS` (repo artifact)
+
+The checked-in [`data/legacy-weeks.json`](../data/legacy-weeks.json) mirrors the legacy `WEEKS` array from [`index.html`](../index.html). Regenerate it after editing `WEEKS` (same bracket-extraction approach as `scripts/build-canonical-export-from-weeks.js`, or re-run your extraction command).
+
+- **Generate** the same JSON shape the app uses for **Export Canonical Plan**:
+
+  ```bash
+  node scripts/build-canonical-export-from-weeks.js --out training-plan-canonical.json
+  ```
+
+  Optional: `--start-date YYYY-MM-DD`, `--name "My Plan"`, or a path to a legacy weeks JSON file as the first argument.
+
+- **Import (overwrites canonical plan):** sign in → **Plan Editor** → **Import and Overwrite Plan** → choose the generated file. Export the current canonical plan first if you need a backup.
+
+- **Import via API:** `POST /api/training-plan-import` with the file body as JSON and `Authorization: Bearer <access_token>`.
+
+- **Verify:** reload the app, confirm **Plan Editor** shows the plan and **Today / Week / Full Calendar** match `start_date` (default `2026-05-04`, aligned with `PLAN_START` in `index.html`). Optionally export again from the app and diff against the generated file (IDs and `exported_at` will differ; `plan.days` content should match aside from server-assigned row IDs after import).
+
 ## 3) Configure workout providers
 
 - Garmin primary provider:
