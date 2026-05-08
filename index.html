@@ -2953,6 +2953,11 @@ async function importTrainingPlanFile() {
   }
   const text = await file.text();
   const isCsv = /\.csv$/i.test(file.name) || String(file.type || '').includes('csv');
+  // #region agent log
+  try {
+    fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'230f27'},body:JSON.stringify({sessionId:'230f27',hypothesisId:'E',location:'index.html:2954',message:'frontend importTrainingPlanFile read file',data:{fileName:file.name,fileType:file.type,fileSize:file.size,textType:typeof text,textLen:(text||'').length,textPreview:(text||'').slice(0,200),isCsv},timestamp:Date.now()})}).catch(()=>{});
+  } catch (_e) {}
+  // #endregion
   if (isCsv) {
     await authedJsonFetch('/api/training-plan-import', {
       method: 'POST',
