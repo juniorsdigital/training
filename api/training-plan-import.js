@@ -4,6 +4,16 @@ const { authenticateRequest } = require('../lib/apiAuth.js');
 const { parseBody, overwriteCanonicalPlan } = require('../lib/trainingPlanService.js');
 const { parsePlanCsv } = require('../lib/trainingPlanCsv.js');
 
+async function readRequestBodyAsString(req) {
+  if (typeof req.body === 'string') return req.body;
+  if (req.body && Buffer.isBuffer(req.body)) return req.body.toString('utf8');
+  const chunks = [];
+  for await (const chunk of req) {
+    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
 module.exports = async function handler(req, res) {
   const user = await authenticateRequest(req, res);
   if (!user) return;
@@ -39,12 +49,19 @@ module.exports = async function handler(req, res) {
       fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'230f27'},body:JSON.stringify({sessionId:'230f27',hypothesisId:'A,B,C,D',location:'api/training-plan-import.js:17',message:'incoming request body diagnostic',data:{contentType,bodyType:_t,isBuffer:_isBuffer,bodyLen:_len,preview:_preview,headerKeys:Object.keys(req.headers||{})},timestamp:Date.now()})}).catch(()=>{});
     } catch (_e) {}
     // #endregion
-    const incoming = contentType.includes('text/csv')
-      ? parsePlanCsv(typeof req.body === 'string' ? req.body : '')
-      : (() => {
-        const body = parseBody(req);
-        return body.plan || body;
-      })();
+    let incoming;
+    if (contentType.includes('text/csv')) {
+      const csvText = await readRequestBodyAsString(req);
+      // #region agent log (debug session 230f27, runId=post-fix)
+      try {
+        fetch('http://127.0.0.1:7393/ingest/08dac9f5-b509-4991-86ef-01bcfd09de75',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'230f27'},body:JSON.stringify({sessionId:'230f27',runId:'post-fix',hypothesisId:'B',location:'api/training-plan-import.js:after-readRequestBodyAsString',message:'post-fix: raw body string read',data:{csvLen:(csvText||'').length,csvPreview:(csvText||'').slice(0,120)},timestamp:Date.now()})}).catch(()=>{});
+      } catch (_e) {}
+      // #endregion
+      incoming = parsePlanCsv(csvText);
+    } else {
+      const body = parseBody(req);
+      incoming = body.plan || body;
+    }
     if (!incoming.name || !incoming.start_date) {
       return res.status(400).json({ error: 'plan.name and plan.start_date are required.' });
     }
