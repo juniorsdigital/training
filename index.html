@@ -2806,7 +2806,11 @@ async function sendAiMessage() {
     const payload = await authedJsonFetch('/api/training-plan-ai-adjustments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, conversation: aiMessagingHistory.slice(-8) })
+      body: JSON.stringify({
+        message,
+        conversation: aiMessagingHistory.slice(-8),
+        localDate: getLocalISODate(today)
+      })
     });
     aiPendingProposal = payload;
     appendAiMessage('assistant', payload.assistant_message || 'Proposal ready. Review changes below.');

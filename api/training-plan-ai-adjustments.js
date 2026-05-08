@@ -2,7 +2,8 @@
 
 const { authenticateRequest } = require('../lib/apiAuth.js');
 const { parseBody, getCanonicalPlan } = require('../lib/trainingPlanService.js');
-const { requestGeminiJson } = require('../lib/aiGemini.js');
+const { buildDashboardOverviewPayload } = require('../lib/dashboardOverviewData.js');
+const { requestGeminiJson, buildAthleteContextForPrompt } = require('../lib/aiGemini.js');
 const {
   normalizeOperations,
   buildPreview,
@@ -20,15 +21,35 @@ module.exports = async function handler(req, res) {
   try {
     const body = parseBody(req);
     const message = String(body?.message || '').trim();
+    const localDate = /^\d{4}-\d{2}-\d{2}$/.test(String(body?.localDate || ''))
+      ? String(body.localDate).slice(0, 10)
+      : new Date().toISOString().slice(0, 10);
     if (!message) return res.status(400).json({ error: 'message is required.' });
 
     const plan = await getCanonicalPlan();
     if (!plan) return res.status(404).json({ error: 'No canonical plan found.' });
+    let athleteContext = buildAthleteContextForPrompt({
+      localDate,
+      recentDays: 21,
+      plan
+    });
+    try {
+      const overview = await buildDashboardOverviewPayload(localDate, { historyDays: 21, includeHistory: true });
+      athleteContext = buildAthleteContextForPrompt({
+        localDate,
+        recentDays: 21,
+        plan,
+        overview
+      });
+    } catch (_) {
+      // Fall back to plan-only context if athlete feeds are unavailable.
+    }
 
     const aiProposal = await requestGeminiJson({
       message,
       conversation: body?.conversation || [],
-      plan
+      plan,
+      athleteContext
     });
     const normalizedOperations = normalizeOperations(plan, aiProposal.operations || [], { allowEmpty: true });
     const preview = buildPreview(plan, normalizedOperations);

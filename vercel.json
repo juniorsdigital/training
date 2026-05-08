@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/daily-training-recommendations",
+      "schedule": "0 12 * * *"
+    }
+  ],
   "redirects": [
     {
       "source": "/peak-cycling-dashboard.html",
