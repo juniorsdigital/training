@@ -2155,7 +2155,7 @@ async function loadPublicOverview() {
   }
   try {
     const localDate = getLocalISODate(today);
-    const response = await fetch(`/api/dashboard-overview-public?localDate=${encodeURIComponent(localDate)}`);
+    const response = await fetch(`/api/dashboard-overview?localDate=${encodeURIComponent(localDate)}`);
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'Could not load today’s data.');
     renderPublicMinimal(payload);
