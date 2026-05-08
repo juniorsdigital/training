@@ -452,6 +452,22 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .kcal-del-btn:hover{color:var(--z5)}
 .kcal-empty{padding:20px 14px;text-align:center;font-size:12px;color:var(--muted);font-style:italic}
 .kcal-err{padding:8px 14px;font-size:11px;color:var(--z5)}
+.msg-thread{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto;padding:12px 14px}
+.msg-bubble{padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.5;border:1px solid var(--border)}
+.msg-bubble.user{background:var(--surface2);color:var(--text)}
+.msg-bubble.assistant{background:var(--accent-dim);color:var(--text)}
+.msg-compose{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--border);flex-wrap:wrap}
+.msg-input{flex:1;min-width:220px;min-height:72px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:8px 10px;resize:vertical;outline:none}
+.msg-input:focus{border-color:var(--accent)}
+.msg-preview{font-size:12px;display:grid;gap:8px}
+.msg-preview-empty{font-size:12px;color:var(--muted);font-style:italic}
+.msg-preview-day{border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;background:var(--surface2)}
+.msg-preview-meta{font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px}
+.msg-preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.msg-preview-col{font-size:11px}
+.msg-preview-col b{display:block;margin-bottom:4px;color:var(--text)}
+.msg-status{font-size:11px;color:var(--muted);margin-top:8px}
+.msg-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .kcal-macro-section{border-bottom:1px solid var(--border);padding:4px 0}
 .kcal-macro-row{display:flex;align-items:center;gap:10px;padding:5px 14px}
 .kcal-macro-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;width:46px;flex-shrink:0}
@@ -599,6 +615,9 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
       <div class="nav-item" data-panel="plan-editor">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>Plan Editor
       </div>
+      <div class="nav-item" data-panel="messaging">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messaging
+      </div>
       <div class="nav-sec">Reference</div>
       <div class="nav-item" data-panel="calendar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14" stroke-width="3" stroke-linecap="round"/><line x1="12" y1="14" x2="12" y2="14" stroke-width="3" stroke-linecap="round"/><line x1="16" y1="14" x2="16" y2="14" stroke-width="3" stroke-linecap="round"/></svg>Full Calendar
@@ -724,6 +743,37 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
             <div><b>Overwrite behavior:</b> Import updates canonical plan metadata and replaces all existing day/goals records with the file contents.</div>
             <div><b>Tip:</b> Start from the template CSV to preserve the expected schema.</div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MESSAGING PANEL -->
+    <div class="panel" id="panel-messaging">
+      <div class="sec-title">Training Plan Messaging</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Ask for schedule adjustments or notes updates. You can preview changes before anything is applied.</p>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-hdr"><span class="card-title">Conversation</span></div>
+        <div class="msg-thread" id="aiMsgThread">
+          <div class="msg-bubble assistant">Describe a schedule shift (example: move Thursday threshold to Friday) or ask for notes updates.</div>
+        </div>
+        <div class="msg-compose">
+          <textarea id="aiMsgInput" class="msg-input" placeholder="Type your request..."></textarea>
+          <div class="msg-actions">
+            <button id="aiMsgSendBtn" class="kcal-add-btn" type="button">Send</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Proposed Changes (Preview)</span></div>
+        <div class="card-body">
+          <div class="msg-preview" id="aiProposalPreview">
+            <div class="msg-preview-empty">No proposal yet.</div>
+          </div>
+          <div class="msg-actions" style="margin-top:10px">
+            <button id="aiProposalApplyBtn" class="kcal-add-btn" type="button" disabled>Apply Changes</button>
+            <button id="aiProposalDiscardBtn" class="kcal-add-btn" type="button" disabled style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)">Discard</button>
+          </div>
+          <div class="msg-status" id="aiMsgStatus"></div>
         </div>
       </div>
     </div>
@@ -2665,6 +2715,166 @@ function setPlanEditorStatus(msg, isError = false) {
   el.textContent = msg || '';
 }
 
+// =================== TRAINING PLAN MESSAGING ===================
+let aiMessagingHistory = [];
+let aiPendingProposal = null;
+
+function setAiStatus(msg, isError = false) {
+  const el = document.getElementById('aiMsgStatus');
+  if (!el) return;
+  el.style.color = isError ? 'var(--z5)' : 'var(--muted)';
+  el.textContent = msg || '';
+}
+
+function appendAiMessage(role, text) {
+  aiMessagingHistory.push({ role, text: String(text || '') });
+  const thread = document.getElementById('aiMsgThread');
+  if (!thread) return;
+  const row = document.createElement('div');
+  row.className = `msg-bubble ${role === 'user' ? 'user' : 'assistant'}`;
+  row.textContent = String(text || '');
+  thread.appendChild(row);
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function formatPlanDayReference(day) {
+  if (!day) return 'Unknown day';
+  const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const week = Number(day.week_index) + 1;
+  const dayName = names[Number(day.day_index)] || `D${day.day_index}`;
+  return `W${week} ${dayName} (${day.day_date || 'n/a'})`;
+}
+
+function summarizePreviewDay(day) {
+  if (!day) return 'Missing day';
+  const base = `${day.session_type || 'rest'} · ${day.label || 'Workout'}`;
+  return `${base}${day.details ? `\n${day.details}` : ''}`;
+}
+
+function renderAiProposalPreview() {
+  const wrap = document.getElementById('aiProposalPreview');
+  const applyBtn = document.getElementById('aiProposalApplyBtn');
+  const discardBtn = document.getElementById('aiProposalDiscardBtn');
+  if (!wrap || !applyBtn || !discardBtn) return;
+
+  if (!aiPendingProposal) {
+    wrap.innerHTML = '<div class="msg-preview-empty">No proposal yet.</div>';
+    applyBtn.disabled = true;
+    discardBtn.disabled = true;
+    return;
+  }
+  const hasOperations = Array.isArray(aiPendingProposal.operations) && aiPendingProposal.operations.length > 0;
+
+  const rows = (aiPendingProposal.preview?.affected_days || []).map((entry) => `
+    <div class="msg-preview-day">
+      <div class="msg-preview-meta">${escapeHtml(formatPlanDayReference(entry.after || entry.before))}</div>
+      <div class="msg-preview-grid">
+        <div class="msg-preview-col">
+          <b>Before</b>
+          <div>${escapeHtml(summarizePreviewDay(entry.before))}</div>
+        </div>
+        <div class="msg-preview-col">
+          <b>After</b>
+          <div>${escapeHtml(summarizePreviewDay(entry.after))}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  wrap.innerHTML = rows || '<div class="msg-preview-empty">Proposal has no affected days.</div>';
+  applyBtn.disabled = !hasOperations;
+  discardBtn.disabled = false;
+}
+
+async function sendAiMessage() {
+  const input = document.getElementById('aiMsgInput');
+  const sendBtn = document.getElementById('aiMsgSendBtn');
+  if (!input || !sendBtn) return;
+  const message = input.value.trim();
+  if (!message) return;
+  if (!activePlan?.id) {
+    setAiStatus('No canonical plan loaded yet. Import or refresh plan first.', true);
+    return;
+  }
+
+  sendBtn.disabled = true;
+  setAiStatus('Generating proposal...');
+  appendAiMessage('user', message);
+  input.value = '';
+
+  try {
+    const payload = await authedJsonFetch('/api/training-plan-ai-adjustments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, conversation: aiMessagingHistory.slice(-8) })
+    });
+    aiPendingProposal = payload;
+    appendAiMessage('assistant', payload.assistant_message || 'Proposal ready. Review changes below.');
+    renderAiProposalPreview();
+    const operationCount = payload.preview?.operation_count || 0;
+    setAiStatus(operationCount ? `Proposal ready: ${operationCount} operation(s).` : 'No safe plan changes proposed. You can refine your request.');
+  } catch (error) {
+    appendAiMessage('assistant', 'I could not build a proposal. Please adjust your request and try again.');
+    setAiStatus(error.message, true);
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+async function applyAiProposal() {
+  if (!aiPendingProposal) return;
+  const applyBtn = document.getElementById('aiProposalApplyBtn');
+  if (applyBtn) applyBtn.disabled = true;
+  setAiStatus('Applying proposal...');
+  try {
+    await authedJsonFetch('/api/training-plan-apply-changes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        operations: aiPendingProposal.operations,
+        proposal_hash: aiPendingProposal.proposal_hash,
+        plan_id: aiPendingProposal.plan_id,
+        plan_version: aiPendingProposal.plan_version
+      })
+    });
+    appendAiMessage('assistant', 'Changes applied successfully. Canonical plan has been refreshed.');
+    aiPendingProposal = null;
+    renderAiProposalPreview();
+    await refreshCanonicalPlan();
+    setAiStatus('Applied and refreshed.');
+  } catch (error) {
+    setAiStatus(error.message, true);
+  } finally {
+    if (applyBtn) applyBtn.disabled = false;
+  }
+}
+
+function discardAiProposal() {
+  aiPendingProposal = null;
+  renderAiProposalPreview();
+  setAiStatus('Proposal discarded.');
+}
+
+function initPlanMessaging() {
+  const panel = document.getElementById('panel-messaging');
+  if (!panel) return;
+  const sendBtn = document.getElementById('aiMsgSendBtn');
+  const applyBtn = document.getElementById('aiProposalApplyBtn');
+  const discardBtn = document.getElementById('aiProposalDiscardBtn');
+  const input = document.getElementById('aiMsgInput');
+  if (!sendBtn || !applyBtn || !discardBtn || !input) return;
+  sendBtn.addEventListener('click', () => sendAiMessage());
+  applyBtn.addEventListener('click', () => applyAiProposal());
+  discardBtn.addEventListener('click', () => discardAiProposal());
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      sendAiMessage();
+    }
+  });
+  renderAiProposalPreview();
+}
+
 async function loadCanonicalPlan() {
   const data = await authedJsonFetch('/api/training-plans?mode=canonical');
   activePlan = data.plan || null;
@@ -2814,6 +3024,7 @@ function navigateToPanel(panel) {
   if (panel === 'zones') renderZoneBars();
   if (panel === 'nutrition') { renderNutPanel('rest'); loadNutritionTracker(); }
   if (panel === 'plan-editor') refreshCanonicalPlan().catch(() => {});
+  if (panel === 'messaging') renderAiProposalPreview();
   // Close sidebar on mobile after navigation
   closeSidebar();
   window.scrollTo(0, 0);
@@ -2924,6 +3135,7 @@ if (publicThemeBtn) publicThemeBtn.addEventListener('click', toggleTheme);
 // =================== INIT ===================
 async function initApp() {
   initPlanEditor();
+  initPlanMessaging();
   const { loggedIn } = await initAuthPortal();
   if (loggedIn) {
     setViewMode('full');
