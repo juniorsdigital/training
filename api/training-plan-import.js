@@ -12,6 +12,21 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed.' });
   }
 
+  // #region agent diag (debug session 230f27) - body inspection helper
+  function _csvDiag() {
+    const _b = req.body;
+    const _t = typeof _b;
+    const _isBuffer = !!(_b && _t === 'object' && typeof _b.byteLength === 'number' && typeof _b.copy === 'function');
+    const _isObj = !!(_b && _t === 'object' && !_isBuffer);
+    let _len = 0;
+    let _preview = '';
+    if (_t === 'string') { _len = _b.length; _preview = _b.slice(0, 120); }
+    else if (_isBuffer) { _len = _b.byteLength; try { _preview = _b.toString('utf8', 0, Math.min(120, _b.byteLength)); } catch (_e) {} }
+    else if (_isObj) { try { const _s = JSON.stringify(_b); _len = _s.length; _preview = _s.slice(0, 120); } catch (_e) {} }
+    else { _preview = String(_b); }
+    return { ct: String(req.headers['content-type'] || ''), cl: req.headers['content-length'] || null, type: _t, isBuffer: _isBuffer, isObject: _isObj, len: _len, preview: _preview };
+  }
+  // #endregion
   try {
     const contentType = String(req.headers['content-type'] || '').toLowerCase();
     // #region agent log
@@ -41,6 +56,10 @@ module.exports = async function handler(req, res) {
       mode: 'overwrite-canonical'
     });
   } catch (error) {
-    return res.status(500).json({ error: error.message || 'Unexpected server error.' });
+    // #region agent diag (debug session 230f27) - surface diagnostic in response body
+    let _diagStr = '';
+    try { _diagStr = ' [diag230f27 ' + JSON.stringify(_csvDiag()) + ']'; } catch (_e) {}
+    return res.status(500).json({ error: (error.message || 'Unexpected server error.') + _diagStr });
+    // #endregion
   }
 };
