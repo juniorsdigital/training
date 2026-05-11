@@ -1589,11 +1589,12 @@ const MONTHS_FULL = ['January','February','March','April','May','June','July','A
 const Z_CSS = {
   rest:'bg-rest c-rest', z1:'bg-z1 c-z1', z2:'bg-z2 c-z2',
   ss:'bg-ss c-ss', thr:'bg-thr c-thr', vo2:'bg-vo2 c-vo2',
-  spr:'bg-spr c-spr', tst:'bg-tst c-tst'
+  spr:'bg-spr c-spr', tst:'bg-tst c-tst',
+  ride:'bg-z2 c-z2', strength:'bg-ss c-ss', test:'bg-tst c-tst'
 };
-const Z_LABEL = {rest:'REST',z1:'Z1',z2:'Z2',ss:'Sweet Spot',thr:'Threshold',vo2:'VO2max',spr:'SPRINT',tst:'TESTING'};
-const Z_COLOR_VAR = {rest:'--rst',z1:'--z1',z2:'--z2',ss:'--z3',thr:'--z4',vo2:'--z5',spr:'--spr',tst:'--tst'};
-const NUT_MAP = {rest:'rest',z1:'z2only',z2:'z2only',z2long:'longride',ss:'z2lift',thr:'z2lift',vo2:'vo2',spr:'vo2',tst:'test',ana:'vo2'};
+const Z_LABEL = {rest:'REST',z1:'Z1',z2:'Z2',ss:'Sweet Spot',thr:'Threshold',vo2:'VO2max',spr:'SPRINT',tst:'TESTING',ride:'RIDE',strength:'STRENGTH',test:'TESTING'};
+const Z_COLOR_VAR = {rest:'--rst',z1:'--z1',z2:'--z2',ss:'--z3',thr:'--z4',vo2:'--z5',spr:'--spr',tst:'--tst',ride:'--z2',strength:'--z3',test:'--tst'};
+const NUT_MAP = {rest:'rest',z1:'z2only',z2:'z2only',z2long:'longride',ss:'z2lift',thr:'z2lift',vo2:'vo2',spr:'vo2',tst:'test',ana:'vo2',ride:'z2only',strength:'z2lift',test:'test'};
 const PHASE_COLORS = {'0':'--tst','1':'--z2','2':'--z3','3':'--z4','4':'--spr','T':'--accent','F':'--accent'};
 
 // WEEKS DATA
@@ -1983,7 +1984,7 @@ function mergePlanDayRowsUi(rows) {
   sorted.forEach((d) => {
     const ts = String(d.time_slot || '').trim().toLowerCase();
     labels.push(displayPlanLabel(d.label));
-    types.push(String(d.session_type || 'rest'));
+    types.push(String(d.session_type || 'rest').toLowerCase());
     if (d.details) details.push(String(d.details));
     const gt = (d.goals || [])
       .map((g) =>
