@@ -2061,7 +2061,7 @@ function mapPlanApiToWeeks(plan) {
   const buckets = new Map();
   groups.forEach((rows) => {
     const first = rows[0];
-    const weekNumber = Number(first.week_index) + 1;
+    const weekNumber = Number(first.week_index);
     const di = Number(first.day_index);
     const merged = mergePlanDayRowsUi(rows);
 
@@ -2082,7 +2082,7 @@ function mapPlanApiToWeeks(plan) {
 
   const tssByWeek = new Map();
   (plan?.days || []).forEach((d) => {
-    const wn = Number(d.week_index) + 1;
+    const wn = Number(d.week_index);
     const wt =
       d.week_target_tss === null || d.week_target_tss === undefined || d.week_target_tss === ''
         ? null
@@ -2091,7 +2091,7 @@ function mapPlanApiToWeeks(plan) {
   });
   const goalsByWeek = new Map();
   (plan?.days || []).forEach((d) => {
-    const wn = Number(d.week_index) + 1;
+    const wn = Number(d.week_index);
     const list = goalsByWeek.get(wn) || [];
     list.push(...(d.goals || []));
     goalsByWeek.set(wn, list);
