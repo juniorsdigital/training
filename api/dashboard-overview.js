@@ -25,7 +25,17 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const payload = await buildDashboardOverviewPayload(localDate);
+    const includeHistory =
+      req.query.includeHistory === '1' ||
+      req.query.includeHistory === 'true' ||
+      req.query.includeHistory === 'yes';
+    const historyDaysRaw = Number(req.query.historyDays);
+    const historyDays = Number.isFinite(historyDaysRaw) && historyDaysRaw > 0 ? historyDaysRaw : undefined;
+
+    const payload = await buildDashboardOverviewPayload(localDate, {
+      includeHistory,
+      historyDays
+    });
     if (!accessToken) {
       const safeBodyBattery = payload.bodyBattery
         ? {

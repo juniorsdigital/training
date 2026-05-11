@@ -307,6 +307,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .home-intro{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5}
 .home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
 @media(max-width:1000px){.home-grid{grid-template-columns:1fr}}
+@media(max-width:1000px){.home-foot-grid{grid-template-columns:1fr}}
 .home-vitals-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:500px){.home-vitals-row{grid-template-columns:1fr}}
 .home-vital{background:var(--surface2);border-radius:var(--radius-sm);padding:12px;text-align:center;border:1px solid var(--border)}
@@ -711,6 +712,18 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
         </div>
         <div id="kcalOvBody"><div class="kcal-ov-empty">No calorie data logged yet.</div></div>
       </div>
+      <div class="home-foot-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Training load (Intervals)</span></div>
+          <div class="card-body" id="homeTssSummary" style="font-size:12px;line-height:1.55;color:var(--text)">
+            <p style="margin:0;color:var(--muted)">Load appears after sync.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Recent workouts</span></div>
+          <div class="card-body home-history-scroll" id="homeRecentWorkouts" style="max-height:240px;overflow-y:auto;font-size:12px;line-height:1.45"></div>
+        </div>
+      </div>
       <div class="home-err" id="homeOverviewErr" style="display:none"></div>
     </div>
 
@@ -739,7 +752,8 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
         <div class="card-body" style="display:grid;gap:8px">
           <div style="font-size:12px;color:var(--muted);line-height:1.55">
             <div><b>Workflow:</b> Export/download a CSV template, edit the file offline, then import it to replace the website plan in full.</div>
-            <div><b>Expected CSV:</b> Include `plan_name`, `start_date`, `week_index`, `day_index`, `day_date`, `session_type`, and `label` columns. Optional goals go in `goals_json`.</div>
+            <div><b>Expected CSV:</b> Include `plan_name`, `start_date`, `total_weeks`, `week_index`, `day_index`, `day_date`, `session_type`, `label`, `phase_label`, and `phase_code`. Optional: `session_slot` (0,1,…) and `time_slot` (`am` / `pm`) for multiple workouts on the same day; optional `week_target_tss` (weekly goal training stress, duplicated per row is fine). Weekly goal TSS can also be set via `goals_json` with goal_type <code>goal_tss_week</code> and <code>target_value</code>.</div>
+            <div><b>Phase codes (workout phases / filters):</b> Use <code>0</code> Testing, <code>1</code> SS Base, <code>2</code> Polar Build, <code>3</code> Peak Power, <code>4</code> Sprint Peak, <code>T</code> Transition, <code>F</code> Final Test. The Week view and Full Calendar “~TSS” column show <b>weekly goal</b> training stress when provided.</div>
             <div><b>Overwrite behavior:</b> Import updates canonical plan metadata and replaces all existing day/goals records with the file contents.</div>
             <div><b>Tip:</b> Start from the template CSV to preserve the expected schema.</div>
           </div>
@@ -841,7 +855,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 
     <!-- CALENDAR PANEL -->
     <div class="panel" id="panel-calendar">
-      <div class="sec-title">Full Training Calendar — May 4 to Dec 28, 2026</div>
+      <div class="sec-title" id="calendarSecTitle">Full Training Calendar</div>
       <div class="cal-ctrl">
         <div class="cal-filter" id="calFilter">
           <button class="cal-pb active" data-phase="all">All</button>
@@ -850,6 +864,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
           <button class="cal-pb" data-phase="2">Polar Build</button>
           <button class="cal-pb" data-phase="3">Peak Power</button>
           <button class="cal-pb" data-phase="4">Sprint Peak</button>
+          <button class="cal-pb" data-phase="T">Transition</button>
           <button class="cal-pb" data-phase="F">Final Test</button>
         </div>
         <input class="cal-search" type="text" id="calSearch" placeholder="Search…">
@@ -1075,6 +1090,18 @@ function setViewMode(mode) {
   }
 }
 
+function getTodayLocal() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function refreshTodayDate() {
+  today = getTodayLocal();
+  currentWeekIdx = Math.max(0, Math.min(planWeekCount() - 1, getWeekIdx(today)));
+  currentDayIdx = getDayIdx(today);
+}
+
 function getLocalISODate(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -1230,7 +1257,7 @@ function renderHomeOverview(apiData) {
   const wk = weeks[Math.max(0, Math.min(planWeekCount() - 1, currentWeekIdx))];
   const planDay = wk ? wk.days[currentDayIdx] : null;
   if (wk && planDay) {
-    document.getElementById('homeSubline').innerHTML = `${escapeHtml(wk.phase)} · Week ${wk.wk} of ${planWeekCount()} · <span style="color:var(--text)">${escapeHtml(planDay.lbl)}</span>`;
+    document.getElementById('homeSubline').innerHTML = `${escapeHtml(wk.phase)} · Week ${wk.wk} of ${planWeekCount()} · <span style="color:var(--text)">${escapeHtml(displayPlanLabel(planDay.lbl) || '')}</span>`;
     const zc = Z_CSS[planDay.t] || 'bg-rest c-rest';
     const zl = Z_LABEL[planDay.t] || planDay.t;
     const badge = document.getElementById('homePlanBadge');
@@ -1256,7 +1283,7 @@ function renderHomeOverview(apiData) {
   const schedEl = document.getElementById('homeScheduledBody');
   let schedHtml = '';
   if (planDay) {
-    schedHtml += `<div class="workout-name" style="margin-bottom:8px">${escapeHtml(planDay.lbl)}</div>`;
+    schedHtml += `<div class="workout-name" style="margin-bottom:8px">${escapeHtml(displayPlanLabel(planDay.lbl) || '')}</div>`;
     if (planDay.am) {
       const bc = planDay.t === 'rest' ? 'var(--rst)' : getZoneColor(planDay.t);
       schedHtml += `<div class="session-block" style="border-color:${bc};margin-bottom:8px"><div class="sess-time">Plan — morning</div><div class="sess-desc">${escapeHtml(planDay.am)}</div></div>`;
@@ -1298,10 +1325,7 @@ function renderHomeOverview(apiData) {
       body.innerHTML = `<div class="home-status rest">No ride required</div>
         <p style="font-size:12px;color:var(--muted);margin-top:10px">No Garmin-synced ride found for today yet.</p>`;
     }
-    return;
-  }
-
-  if (logged && primary) {
+  } else if (logged && primary) {
     doneBadge.textContent = 'Completed';
     doneBadge.className = 'badge home-status done';
     body.innerHTML = `<div class="home-status done" style="margin-bottom:10px">Logged in Intervals.icu / Garmin</div>
@@ -1319,6 +1343,32 @@ function renderHomeOverview(apiData) {
     doneBadge.className = 'badge home-status pending';
     body.innerHTML = `<div class="home-status pending">No qualifying workout logged for today</div>
       <p style="font-size:12px;color:var(--muted);margin-top:10px">After your Garmin syncs to Intervals.icu, press Refresh above.</p>`;
+  }
+
+  const goalStr = apiData.tssWeekGoal != null ? String(Math.round(apiData.tssWeekGoal)) : '—';
+  const todayLoadStr = apiData.tssToday != null ? String(Math.round(apiData.tssToday)) : '—';
+  const weekActStr = apiData.tssWeekActual != null ? String(Math.round(apiData.tssWeekActual)) : '—';
+  const tssSummaryEl = document.getElementById('homeTssSummary');
+  if (tssSummaryEl) {
+    tssSummaryEl.innerHTML = `
+      <div style="margin-bottom:6px"><strong>Today:</strong> ${todayLoadStr}</div>
+      <div><strong>This plan week:</strong> ${weekActStr} / ${goalStr}${goalStr !== '—' ? ' <span style="color:var(--muted)">(weekly goal)</span>' : ''}</div>
+      <p style="margin:8px 0 0;font-size:11px;color:var(--muted)">Values use Intervals.icu training load (TSS).</p>`;
+  }
+  const recentEl = document.getElementById('homeRecentWorkouts');
+  if (recentEl) {
+    const hist = Array.isArray(apiData.activityHistory) ? apiData.activityHistory : [];
+    const sorted = [...hist].sort((a, b) =>
+      String(b.startLocal || '').localeCompare(String(a.startLocal || ''))
+    );
+    const lines = sorted.slice(0, 28).map((a) => {
+      const day = String(a.startLocal || '').slice(0, 10);
+      const load = a.icuTrainingLoad != null ? Math.round(a.icuTrainingLoad) : '—';
+      return `<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">${escapeHtml(day)}</span> · <strong>${escapeHtml(a.name || 'Activity')}</strong> · ${load}</div>`;
+    });
+    recentEl.innerHTML = lines.length
+      ? lines.join('')
+      : '<p style="margin:0;color:var(--muted)">No activities in the recent window.</p>';
   }
 
   if (apiData.fetchErrors?.activities) {
@@ -1345,6 +1395,7 @@ async function loadDashboardOverview() {
   if (btn) btn.disabled = true;
   setSyncStatus('Loading Intervals.icu…');
   try {
+    refreshTodayDate();
     const localDate = getLocalISODate(today);
     let session = null;
     if (supabaseClient) {
@@ -1358,7 +1409,7 @@ async function loadDashboardOverview() {
       setSyncStatus('');
       return;
     }
-    const url = `/api/dashboard-overview?localDate=${encodeURIComponent(localDate)}`;
+    const url = `/api/dashboard-overview?localDate=${encodeURIComponent(localDate)}&includeHistory=1&historyDays=28`;
     const headers = { Authorization: `Bearer ${session.access_token}` };
     const response = await fetch(url, { headers });
     const payload = await response.json();
@@ -1457,6 +1508,7 @@ async function initAuthPortal() {
         hideLoginOverlay();
         updateAuthenticatedChrome(true);
         setViewMode('full');
+        refreshTodayDate();
         renderToday();
         renderWeek();
         renderZoneBars();
@@ -1883,37 +1935,189 @@ function getPlanDay(weekIdx, dayIdx) {
   return day ? { week: wk, day } : null;
 }
 
+const VALID_PHASE_CODES_UI = new Set(['0', '1', '2', '3', '4', 'T', 'F']);
+function inferPhaseCodeUi(phaseLabel, phaseCode) {
+  const c = String(phaseCode || '').trim();
+  if (VALID_PHASE_CODES_UI.has(c)) return c;
+  const L = String(phaseLabel || '').toLowerCase();
+  if (/testing|^0[\s–-]/.test(L)) return '0';
+  if (/transition|→|to\s*4/.test(L)) return 'T';
+  if (/final/.test(L)) return 'F';
+  if (/polar/.test(L)) return '2';
+  if (/peak\s*power/.test(L) || /^3[\s–-]/.test(L)) return '3';
+  if (/sprint/.test(L) || /^4[\s–-]/.test(L)) return '4';
+  if (/ss\s*base|sweet\s*spot/.test(L)) return '1';
+  return '1';
+}
+
+function displayPlanLabel(s) {
+  if (s == null) return '';
+  const t = String(s).trim();
+  if (!t || t === '?') return '';
+  return t;
+}
+
+function weekTssFromGoalsUi(goals) {
+  if (!Array.isArray(goals)) return null;
+  const match = goals.find(
+    (g) =>
+      g &&
+      (String(g.goal_type || '').toLowerCase() === 'goal_tss_week' ||
+        String(g.goal_type || '').toLowerCase() === 'tss_week')
+  );
+  if (!match || match.target_value == null) return null;
+  const n = Number(match.target_value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function mergePlanDayRowsUi(rows) {
+  const sorted = [...rows].sort((a, b) => (Number(a.session_slot) || 0) - (Number(b.session_slot) || 0));
+  const labels = [];
+  const details = [];
+  const goalChunks = [];
+  const types = [];
+  const watts = [];
+  const amParts = [];
+  const pmParts = [];
+
+  sorted.forEach((d) => {
+    const ts = String(d.time_slot || '').trim().toLowerCase();
+    labels.push(displayPlanLabel(d.label));
+    types.push(String(d.session_type || 'rest'));
+    if (d.details) details.push(String(d.details));
+    const gt = (d.goals || [])
+      .map((g) =>
+        `${g.goal_type}${g.target_value != null ? `: ${g.target_value}${g.unit ? ` ${g.unit}` : ''}` : ''}${g.notes ? ` (${g.notes})` : ''}`
+      )
+      .join(' | ');
+    if (gt) goalChunks.push(gt);
+    if (d.target_watts_label) watts.push(String(d.target_watts_label));
+    const am = d.am_session ? String(d.am_session).trim() : '';
+    const pm = d.pm_session ? String(d.pm_session).trim() : '';
+    if (ts === 'am') {
+      if (am) amParts.push(am);
+      else if (displayPlanLabel(d.label)) amParts.push(displayPlanLabel(d.label));
+    } else if (ts === 'pm') {
+      if (pm) pmParts.push(pm);
+      else if (displayPlanLabel(d.label)) pmParts.push(displayPlanLabel(d.label));
+    } else {
+      if (am) amParts.push(am);
+      if (pm && pm !== '—') pmParts.push(pm);
+    }
+  });
+
+  const t = types.find((x) => x && x !== 'rest') || 'rest';
+  const lblJoin = labels.filter(Boolean).join(' · ');
+  const lbl = lblJoin || (t === 'rest' ? 'REST' : '');
+  const det = [details.join('\n'), goalChunks.length ? `Goals: ${goalChunks.join(' | ')}` : ''].filter(Boolean).join('\n');
+  return {
+    t,
+    lbl: lbl || '',
+    det,
+    w: watts[0] || null,
+    am: amParts.length ? amParts.join('; ') : null,
+    pm: pmParts.length ? pmParts.join('; ') : null
+  };
+}
+
+function synthesizeMissingWeeksUi(weekArr, totalWeeks) {
+  const tw = Number(totalWeeks);
+  if (!Number.isFinite(tw) || tw < 1) return weekArr;
+  const byWk = new Map(weekArr.map((w) => [w.wk, w]));
+  const out = [];
+  for (let n = 1; n <= tw; n++) {
+    if (byWk.has(n)) {
+      out.push(byWk.get(n));
+    } else {
+      const prev = out[out.length - 1];
+      out.push({
+        wk: n,
+        phase: prev ? prev.phase : 'Plan',
+        pCode: prev ? prev.pCode : '1',
+        tss: prev && prev.tss != null ? prev.tss : null,
+        days: new Array(7).fill(null).map(() => ({
+          t: 'rest',
+          lbl: '',
+          det: '',
+          w: null,
+          am: null,
+          pm: null
+        }))
+      });
+    }
+  }
+  return out;
+}
+
 function mapPlanApiToWeeks(plan) {
-  const buckets = new Map();
+  const groups = new Map();
   (plan?.days || []).forEach((d) => {
-    const weekNumber = Number(d.week_index) + 1;
+    const key = `${Number(d.week_index)}-${Number(d.day_index)}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(d);
+  });
+
+  const buckets = new Map();
+  groups.forEach((rows) => {
+    const first = rows[0];
+    const weekNumber = Number(first.week_index) + 1;
+    const di = Number(first.day_index);
+    const merged = mergePlanDayRowsUi(rows);
+
     if (!buckets.has(weekNumber)) {
       buckets.set(weekNumber, {
         wk: weekNumber,
-        phase: d.phase_label || `Plan Week ${weekNumber}`,
-        pCode: d.phase_code || '1',
+        phase: first.phase_label || `Plan Week ${weekNumber}`,
+        pCode: inferPhaseCodeUi(first.phase_label, first.phase_code),
         tss: null,
         days: new Array(7).fill(null)
       });
     }
-    const goalsText = (d.goals || [])
-      .map((g) => `${g.goal_type}${g.target_value != null ? `: ${g.target_value}${g.unit ? ` ${g.unit}` : ''}` : ''}${g.notes ? ` (${g.notes})` : ''}`)
-      .join(' | ');
-    buckets.get(weekNumber).days[Number(d.day_index)] = {
-      t: d.session_type || 'rest',
-      lbl: d.label || 'Workout',
-      det: [d.details, goalsText ? `Goals: ${goalsText}` : null].filter(Boolean).join('\n'),
-      w: d.target_watts_label || null,
-      am: d.am_session || null,
-      pm: d.pm_session || null
-    };
+    const wk = buckets.get(weekNumber);
+    if (first.phase_label) wk.phase = first.phase_label;
+    wk.pCode = inferPhaseCodeUi(first.phase_label, first.phase_code);
+    wk.days[di] = merged;
   });
-  return Array.from(buckets.values())
-    .sort((a, b) => a.wk - b.wk)
-    .map((wk) => ({
-      ...wk,
-      days: wk.days.map((d) => d || { t: 'rest', lbl: 'REST', det: '', w: null, am: null, pm: null })
-    }));
+
+  const tssByWeek = new Map();
+  (plan?.days || []).forEach((d) => {
+    const wn = Number(d.week_index) + 1;
+    const wt =
+      d.week_target_tss === null || d.week_target_tss === undefined || d.week_target_tss === ''
+        ? null
+        : Number(d.week_target_tss);
+    if (wt != null && Number.isFinite(wt)) tssByWeek.set(wn, wt);
+  });
+  const goalsByWeek = new Map();
+  (plan?.days || []).forEach((d) => {
+    const wn = Number(d.week_index) + 1;
+    const list = goalsByWeek.get(wn) || [];
+    list.push(...(d.goals || []));
+    goalsByWeek.set(wn, list);
+  });
+  goalsByWeek.forEach((goals, wn) => {
+    if (tssByWeek.has(wn)) return;
+    const g = weekTssFromGoalsUi(goals);
+    if (g != null) tssByWeek.set(wn, g);
+  });
+  buckets.forEach((wk, wn) => {
+    if (tssByWeek.has(wn)) wk.tss = tssByWeek.get(wn);
+  });
+
+  let weeks = Array.from(buckets.values()).sort((a, b) => a.wk - b.wk);
+  weeks = weeks.map((wk) => ({
+    ...wk,
+    days: wk.days.map((d) =>
+      d && typeof d === 'object'
+        ? d
+        : { t: 'rest', lbl: '', det: '', w: null, am: null, pm: null }
+    )
+  }));
+  weeks = synthesizeMissingWeeksUi(weeks, plan?.total_weeks);
+  weeks.forEach((wk) => {
+    if (tssByWeek.has(wk.wk)) wk.tss = tssByWeek.get(wk.wk);
+  });
+  return weeks;
 }
 
 // NUTRITION DATA
@@ -2073,7 +2277,7 @@ function getComputedNutritionGoals(dateStr, burnt) {
 }
 
 // =================== CURRENT STATE ===================
-const today = new Date(); today.setHours(0,0,0,0);
+let today = getTodayLocal();
 let currentWeekIdx = Math.max(0, Math.min(planWeekCount() - 1, getWeekIdx(today)));
 let currentDayIdx = getDayIdx(today);
 let viewWeekIdx = currentWeekIdx;
@@ -2148,6 +2352,7 @@ function renderPublicMinimal(apiData) {
 }
 
 async function loadPublicOverview() {
+  refreshTodayDate();
   const errEl = document.getElementById('publicErr');
   if (errEl) {
     errEl.style.display = 'none';
@@ -2212,7 +2417,7 @@ function renderToday() {
   }
 
   const pColorVar = PHASE_COLORS[wk.pCode] || '--accent';
-  document.getElementById('todayTitle').textContent = day.lbl;
+  document.getElementById('todayTitle').textContent = displayPlanLabel(day.lbl) || day.lbl;
   document.getElementById('todayPhaseStr').textContent = `${wk.phase} · Week ${wk.wk} of ${planWeekCount()}`;
   document.getElementById('hdrPhase').textContent = wk.phase;
   document.getElementById('hdrPhase').style.background = `var(${pColorVar}-bg, var(--accent-dim))`;
@@ -2230,7 +2435,7 @@ function renderToday() {
   // Workout body
   let wHTML = `<div style="display:flex;flex-direction:column;gap:10px">`;
   wHTML += `<div class="wtype-badge ${zc}">${zl}</div>`;
-  wHTML += `<div class="workout-name">${day.lbl}</div>`;
+  wHTML += `<div class="workout-name">${escapeHtml(displayPlanLabel(day.lbl) || day.lbl)}</div>`;
   if (day.w) {
     const wColor = getZoneColor(day.t);
     wHTML += `<div><div class="workout-watts" style="color:${wColor}">${day.w}</div><div class="workout-watts-lbl">Target Power</div></div>`;
@@ -2300,8 +2505,12 @@ function renderWeek() {
   document.getElementById('weekPanelTitle').textContent = `Week ${wk.wk} — ${wk.phase}`;
   const startD = getDateForDay(wk.wk-1, 0);
   const endD = getDateForDay(wk.wk-1, 6);
-  document.getElementById('weekPanelDates').textContent = `${formatDate(startD)} – ${formatDate(endD)}, 2026`;
-  document.getElementById('weekTSS').textContent = `~${wk.tss}`;
+  const yStart = startD.getFullYear();
+  const yEnd = endD.getFullYear();
+  const yearStr = yStart === yEnd ? String(yEnd) : `${yStart}–${yEnd}`;
+  document.getElementById('weekPanelDates').textContent = `${formatDate(startD)} – ${formatDate(endD)}, ${yearStr}`;
+  document.getElementById('weekTSS').textContent =
+    wk.tss != null && Number.isFinite(Number(wk.tss)) ? `~${wk.tss}` : '—';
   document.getElementById('wnavLbl').textContent = `${wk.wk}/${planWeekCount()}`;
 
   const grid = document.getElementById('wdaysGrid');
@@ -2319,7 +2528,7 @@ function renderWeek() {
       </div>
       <div class="day-body">
         <div class="day-tag ${zc}">${zl}</div>
-        <div class="day-title-txt">${day.lbl}</div>
+        <div class="day-title-txt">${escapeHtml(displayPlanLabel(day.lbl))}</div>
         ${day.w ? `<div class="day-watts-txt" style="color:${zColor}">${day.w}</div>` : ''}
         ${day.am ? `<div class="day-det">AM: ${day.am}</div>` : ''}
         ${day.pm && day.pm !== '—' ? `<div class="day-det">PM: ${day.pm}</div>` : ''}
@@ -2328,14 +2537,33 @@ function renderWeek() {
   }).join('');
 }
 
+function updateCalendarTitle() {
+  const el = document.getElementById('calendarSecTitle');
+  if (!el) return;
+  if (!activePlan?.start_date || !activePlan?.total_weeks) {
+    el.textContent = 'Full Training Calendar';
+    return;
+  }
+  const start = new Date(`${activePlan.start_date}T12:00:00`);
+  const end = new Date(start);
+  end.setDate(end.getDate() + Number(activePlan.total_weeks) * 7 - 1);
+  const ymd = (dt) => `${MONTHS_FULL[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`;
+  el.textContent = `Full Training Calendar — ${ymd(start)} to ${ymd(end)}`;
+}
+
 // =================== RENDER CALENDAR ===================
 function renderCalendar(filter='all', search='') {
+  updateCalendarTitle();
   const tbody = document.getElementById('calBody');
   const rows = getWeeksData().filter(wk => {
     if (filter !== 'all' && wk.pCode !== filter) return false;
     if (search) {
       const q = search.toLowerCase();
-      return wk.days.some(d => d.lbl.toLowerCase().includes(q) || d.det.toLowerCase().includes(q));
+      return wk.days.some(
+        (d) =>
+          (String(d.lbl || '').toLowerCase().includes(q)) ||
+          (String(d.det || '').toLowerCase().includes(q))
+      );
     }
     return true;
   });
@@ -2351,7 +2579,7 @@ function renderCalendar(filter='all', search='') {
       const zl = Z_LABEL[day.t] || 'REST';
       return `<td style="${isToday?'background:rgba(249,115,22,0.08);':''}" class="cal-day-cell">
         <span class="cal-pill ${zc}">${zl}</span><br>
-        <span class="cal-day-txt">${day.lbl}</span>
+        <span class="cal-day-txt">${escapeHtml(displayPlanLabel(day.lbl))}</span>
       </td>`;
     }).join('');
 
@@ -2360,7 +2588,7 @@ function renderCalendar(filter='all', search='') {
       <td><span style="font-size:10px;font-weight:700;color:var(${pColorVar})">${wk.phase}</span><br>
         <span style="font-size:9px;color:var(--muted)">${formatDate(startD)}</span></td>
       ${cells}
-      <td class="cal-tss">~${wk.tss}</td>
+      <td class="cal-tss">${wk.tss != null && Number.isFinite(Number(wk.tss)) ? `~${wk.tss}` : '—'}</td>
     </tr>`;
   }).join('');
 }
@@ -2629,7 +2857,7 @@ function renderCalorieOverviewCard(eaten, goal, burnt, macros) {
     <div class="kcal-ov-nums">
       <span class="kcal-ov-eaten${over ? ' over' : ''}" style="${over ? 'color:var(--z5)' : ''}">${eaten || 0}</span>
       <span class="kcal-ov-sep">/</span>
-      <span class="kcal-ov-goal">${goal || '?'}</span>
+      <span class="kcal-ov-goal">${goal != null && goal !== '' ? goal : '—'}</span>
       <span class="kcal-ov-label" style="margin-left:4px">kcal eaten</span>
     </div>
     <div class="kcal-ov-bar-wrap"><div class="kcal-ov-bar-fill${over ? ' over' : ''}" style="width:${pct}%"></div></div>
@@ -2890,11 +3118,12 @@ async function loadCanonicalPlan() {
     const mapped = mapPlanApiToWeeks(activePlan);
     if (mapped.length) {
       activeWeeks = mapped;
-      currentWeekIdx = Math.max(0, Math.min(planWeekCount() - 1, getWeekIdx(today)));
+      refreshTodayDate();
       viewWeekIdx = currentWeekIdx;
       renderToday();
       renderWeek();
       renderCalendar();
+      updateCalendarTitle();
     }
   }
 }
@@ -3024,6 +3253,11 @@ function navigateToPanel(panel) {
     } catch (e) { /* ignore quota / private mode */ }
   }
   if (panel === 'home') loadDashboardOverview();
+  if (panel === 'week') {
+    refreshTodayDate();
+    viewWeekIdx = currentWeekIdx;
+    renderWeek();
+  }
   if (panel === 'calendar') renderCalendar();
   if (panel === 'zones') renderZoneBars();
   if (panel === 'nutrition') { renderNutPanel('rest'); loadNutritionTracker(); }
@@ -3137,6 +3371,21 @@ if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
 if (publicThemeBtn) publicThemeBtn.addEventListener('click', toggleTheme);
 
 // =================== INIT ===================
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  const app = document.getElementById('appShell');
+  if (!app || app.classList.contains('is-hidden')) return;
+  const before = getLocalISODate(today);
+  refreshTodayDate();
+  const after = getLocalISODate(today);
+  if (before !== after) {
+    loadDashboardOverview();
+    renderToday();
+    renderWeek();
+    renderCalendar();
+  }
+});
+
 async function initApp() {
   initPlanEditor();
   initPlanMessaging();
@@ -3144,6 +3393,7 @@ async function initApp() {
   if (loggedIn) {
     setViewMode('full');
     initCalorieTracker();
+    refreshTodayDate();
     await refreshCanonicalPlan().catch(() => {});
     renderToday();
     renderWeek();

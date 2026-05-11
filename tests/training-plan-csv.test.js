@@ -22,6 +22,9 @@ function run() {
         pm_session: null,
         phase_label: 'Base',
         phase_code: '1',
+        session_slot: 0,
+        time_slot: null,
+        week_target_tss: null,
         goals: [{ goal_type: 'goal_wattage', target_value: 180, unit: 'W', notes: null, sort_order: 0 }]
       }
     ]
@@ -34,6 +37,7 @@ function run() {
   assert.strictEqual(parsed.start_date, plan.start_date, 'round-trips start date');
   assert.strictEqual(parsed.days.length, 1, 'round-trips day count');
   assert.strictEqual(parsed.days[0].label, 'Endurance Ride', 'round-trips day label');
+  assert.strictEqual(parsed.days[0].session_slot, 0, 'session_slot defaults');
   assert.strictEqual(parsed.days[0].goals[0].goal_type, 'goal_wattage', 'round-trips goals_json');
 
   console.log('training-plan-csv tests: PASS');
