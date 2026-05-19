@@ -188,6 +188,53 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .cal-pill{display:inline-block;padding:1px 5px;border-radius:6px;font-size:9px;font-weight:700;margin-bottom:2px}
 .cal-day-txt{color:var(--muted);font-size:10px;line-height:1.3;white-space:pre-line}
 .cal-tss{font-variant-numeric:tabular-nums;font-weight:700;color:var(--text);white-space:nowrap;text-align:right}
+.cal-month-nav{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.cal-month-nav button{border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:var(--radius-sm);padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+.cal-month-nav button:hover{border-color:var(--accent);color:var(--accent)}
+.cal-month-label{font-size:14px;font-weight:800;flex:1;text-align:center;min-width:140px}
+.cal-week-strip{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:10px;color:var(--muted)}
+.cal-week-strip span{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 8px}
+.cal-week-strip b{color:var(--accent);font-variant-numeric:tabular-nums}
+.cal-month-hdr{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.cal-month-hdr div{text-align:center;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.cal-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;min-height:320px}
+.cal-month-cell{min-height:88px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px;display:flex;flex-direction:column;gap:3px}
+.cal-month-cell--outside{opacity:0.35}
+.cal-month-cell--outplan{background:var(--surface2);opacity:0.5}
+.cal-month-cell--today{border-color:rgba(249,115,22,0.55);box-shadow:inset 0 0 0 1px rgba(249,115,22,0.25)}
+.cal-month-cell--drop-target{border-color:var(--accent);background:rgba(249,115,22,0.08)}
+.cal-month-cell-top{display:flex;align-items:center;justify-content:space-between;gap:2px}
+.cal-month-date{font-size:10px;font-weight:700;color:var(--text)}
+.cal-month-add{border:0;background:transparent;color:var(--faint);cursor:pointer;font-size:14px;line-height:1;padding:0 2px}
+.cal-month-add:hover{color:var(--accent)}
+.cal-month-sessions{flex:1;display:flex;flex-direction:column;gap:3px;min-height:0}
+.cal-session{display:flex;align-items:flex-start;gap:3px;padding:3px 4px;border-radius:6px;background:var(--surface2);border:1px solid rgba(255,255,255,0.06);cursor:grab;font-size:9px;line-height:1.25}
+.cal-session:active{cursor:grabbing}
+.cal-session--dragging{opacity:0.45}
+.cal-session-pill{flex-shrink:0;padding:1px 4px;border-radius:5px;font-weight:700;font-size:8px}
+.cal-session-body{flex:1;min-width:0}
+.cal-session-lbl{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-session-meta{color:var(--muted);font-variant-numeric:tabular-nums}
+.cal-session-del{border:0;background:transparent;color:var(--faint);cursor:pointer;font-size:11px;padding:0;line-height:1}
+.cal-session-del:hover{color:var(--z5)}
+.cal-day-tss-foot{font-size:9px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums;margin-top:auto}
+.cal-status{font-size:11px;color:var(--muted);margin-bottom:8px;min-height:16px}
+.cal-status.err{color:var(--z5)}
+.cal-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.cal-modal-overlay[hidden]{display:none}
+.cal-modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:400px;padding:14px;max-height:90vh;overflow-y:auto}
+.cal-modal h3{margin:0 0 10px;font-size:15px}
+.cal-modal-row{margin-bottom:10px}
+.cal-modal-row label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.cal-modal-row input,.cal-modal-row select,.cal-modal-row textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:12px;padding:6px 8px}
+.cal-dur-presets{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.cal-dur-presets button{border:1px solid var(--border);background:var(--surface2);color:var(--muted);border-radius:12px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer}
+.cal-dur-presets button.active{border-color:var(--accent);color:var(--accent)}
+.cal-modal-preview{font-size:12px;color:var(--accent);font-weight:700;margin:10px 0;padding:8px;background:var(--accent-dim);border-radius:var(--radius-sm)}
+.cal-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.cal-modal-actions button{border-radius:var(--radius-sm);padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+.cal-modal-cancel{border:1px solid var(--border);background:var(--surface2);color:var(--muted)}
+.cal-modal-save{border:0;background:var(--accent);color:#fff}
 /* ZONES */
 .zones-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:3px}
 .zones-sub{font-size:12px;color:var(--muted);margin-bottom:18px}
@@ -752,7 +799,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
         <div class="card-body" style="display:grid;gap:8px">
           <div style="font-size:12px;color:var(--muted);line-height:1.55">
             <div><b>Workflow:</b> Export/download a CSV template, edit the file offline, then import it to replace the website plan in full.</div>
-            <div><b>Expected CSV:</b> Include `plan_name`, `start_date`, `total_weeks`, `week_index`, `day_index`, `day_date`, `session_type`, `label`, `phase_label`, and `phase_code`. Optional: `session_slot` (0,1,…) and `time_slot` (`am` / `pm`) for multiple workouts on the same day; optional `week_target_tss` (weekly goal training stress, duplicated per row is fine). Weekly goal TSS can also be set via `goals_json` with goal_type <code>goal_tss_week</code> and <code>target_value</code>.</div>
+            <div><b>Expected CSV:</b> Include `plan_name`, `start_date`, `total_weeks`, `week_index`, `day_index`, `day_date`, `session_type`, `label`, `phase_label`, and `phase_code`. Per-workout projected TSS: `goal_duration_min`, optional `goal_tss` (manual), `goal_if`, `goal_wattage` in `goals_json`. Optional: `session_slot` (0,1,…) and `time_slot` (`am` / `pm`) for multiple workouts on the same day; optional `week_target_tss` (weekly goal training stress, duplicated per row is fine). Weekly goal TSS can also be set via `goals_json` with goal_type <code>goal_tss_week</code> and <code>target_value</code>.</div>
             <div><b>Phase codes (workout phases / filters):</b> Use <code>0</code> Testing, <code>1</code> SS Base, <code>2</code> Polar Build, <code>3</code> Peak Power, <code>4</code> Sprint Peak, <code>T</code> Transition, <code>F</code> Final Test. The Week view and Full Calendar “~TSS” column show <b>weekly goal</b> training stress when provided.</div>
             <div><b>Overwrite behavior:</b> Import updates canonical plan metadata and replaces all existing day/goals records with the file contents.</div>
             <div><b>Tip:</b> Start from the template CSV to preserve the expected schema.</div>
@@ -856,6 +903,15 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
     <!-- CALENDAR PANEL -->
     <div class="panel" id="panel-calendar">
       <div class="sec-title" id="calendarSecTitle">Full Training Calendar</div>
+      <p style="font-size:10px;color:var(--muted);margin:-6px 0 10px" title="Projected from duration × intensity; completed rides use Intervals load.">Projected TSS from plan inputs · actual load on Overview uses Intervals.icu</p>
+      <div id="calStatus" class="cal-status"></div>
+      <div class="cal-month-nav">
+        <button type="button" id="calMonthPrev" aria-label="Previous month">‹</button>
+        <span class="cal-month-label" id="calMonthLabel">May 2026</span>
+        <button type="button" id="calMonthNext" aria-label="Next month">›</button>
+        <button type="button" id="calMonthToday">Today</button>
+      </div>
+      <div id="calWeekStrip" class="cal-week-strip"></div>
       <div class="cal-ctrl">
         <div class="cal-filter" id="calFilter">
           <button class="cal-pb active" data-phase="all">All</button>
@@ -869,25 +925,62 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
         </div>
         <input class="cal-search" type="text" id="calSearch" placeholder="Search…">
       </div>
-      <div class="cal-wrap">
+      <div class="cal-month-hdr" id="calMonthHdr"></div>
+      <div class="cal-month-grid" id="calMonthGrid"></div>
+      <div class="cal-wrap" id="calWeekWrap" hidden style="margin-top:14px">
         <table class="cal-tbl">
           <thead><tr>
-            <th style="min-width:36px">Wk</th>
-            <th style="min-width:90px">Phase</th>
-            <th style="min-width:110px">Mon</th>
-            <th style="min-width:110px">Tue</th>
-            <th style="min-width:110px">Wed</th>
-            <th style="min-width:110px">Thu</th>
-            <th style="min-width:110px">Fri</th>
-            <th style="min-width:110px">Sat</th>
-            <th style="min-width:110px">Sun</th>
-            <th style="min-width:50px;text-align:right">TSS</th>
+            <th>Wk</th><th>Phase</th>
+            <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
+            <th style="text-align:right">TSS</th>
           </tr></thead>
           <tbody id="calBody"></tbody>
         </table>
       </div>
+      <button type="button" id="calViewToggle" class="cal-pb" style="margin-top:10px">Week table</button>
     </div>
 
+    <div class="cal-modal-overlay" id="calDayModal" hidden>
+      <div class="cal-modal" role="dialog" aria-labelledby="calModalTitle">
+        <h3 id="calModalTitle">Add workout</h3>
+        <div class="cal-modal-row">
+          <label for="calModalType">Session type</label>
+          <select id="calModalType"></select>
+        </div>
+        <div class="cal-modal-row" id="calModalDurRow">
+          <label for="calModalDur">Duration (minutes)</label>
+          <input type="number" id="calModalDur" min="1" max="600" step="5" value="90">
+          <div class="cal-dur-presets" id="calDurPresets">
+            <button type="button" data-min="45">45</button>
+            <button type="button" data-min="60">60</button>
+            <button type="button" data-min="90" class="active">90</button>
+            <button type="button" data-min="120">120</button>
+            <button type="button" data-min="180">180</button>
+          </div>
+        </div>
+        <div class="cal-modal-row">
+          <label for="calModalLabel">Label</label>
+          <input type="text" id="calModalLabel" maxlength="160" placeholder="e.g. Z2 endurance">
+        </div>
+        <div class="cal-modal-row" id="calModalWattsRow">
+          <label for="calModalWatts">Target watts (optional)</label>
+          <input type="number" id="calModalWatts" min="0" max="999" placeholder="Improves IF estimate">
+        </div>
+        <div class="cal-modal-row">
+          <label for="calModalDetails">Details (optional)</label>
+          <textarea id="calModalDetails" rows="2"></textarea>
+        </div>
+        <div class="cal-modal-row">
+          <label><input type="checkbox" id="calModalManualTss"> Manual TSS override</label>
+          <input type="number" id="calModalTss" min="0" max="999" disabled style="margin-top:6px" placeholder="TSS">
+        </div>
+        <div class="cal-modal-preview" id="calModalPreview">~— TSS</div>
+        <div class="cal-modal-actions">
+          <button type="button" class="cal-modal-cancel" id="calModalCancel">Cancel</button>
+          <button type="button" class="cal-modal-save" id="calModalSave">Save</button>
+        </div>
+      </div>
+    </div>
     <!-- ZONES PANEL -->
     <div class="panel" id="panel-zones">
       <div class="zones-title">Power Training Zones</div>
@@ -1031,6 +1124,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 </div>
 
 <script src="/lib/calorieGoalFromBurn.js"></script>
+<script src="/lib/projectedTss.js"></script>
 <script>
 // =================== AUTH + INTEGRATIONS ===================
 let supabaseClient = null;
@@ -2498,6 +2592,16 @@ function renderToday() {
   document.getElementById('recoveryBody').innerHTML = rHTML;
 }
 
+function projectedTssLineForDate(d) {
+  if (!activePlan?.days || !globalThis.calendarClient) return '';
+  const iso = getLocalISODate(d);
+  const sessions = activePlan.days.filter((row) => String(row.day_date).slice(0, 10) === iso);
+  const sum = globalThis.calendarClient.calSumProjectedTssForSessions(sessions);
+  return sum != null
+    ? `<div class="day-det" style="color:var(--accent);font-weight:700">~${Math.round(sum)} TSS projected</div>`
+    : '';
+}
+
 // =================== RENDER WEEK ===================
 function renderWeek() {
   const weeks = getWeeksData();
@@ -2533,6 +2637,7 @@ function renderWeek() {
         ${day.w ? `<div class="day-watts-txt" style="color:${zColor}">${day.w}</div>` : ''}
         ${day.am ? `<div class="day-det">AM: ${day.am}</div>` : ''}
         ${day.pm && day.pm !== '—' ? `<div class="day-det">PM: ${day.pm}</div>` : ''}
+        ${projectedTssLineForDate(d)}
       </div>
     </div>`;
   }).join('');
@@ -2553,45 +2658,27 @@ function updateCalendarTitle() {
 }
 
 // =================== RENDER CALENDAR ===================
-function renderCalendar(filter='all', search='') {
-  updateCalendarTitle();
-  const tbody = document.getElementById('calBody');
-  const rows = getWeeksData().filter(wk => {
-    if (filter !== 'all' && wk.pCode !== filter) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return wk.days.some(
-        (d) =>
-          (String(d.lbl || '').toLowerCase().includes(q)) ||
-          (String(d.det || '').toLowerCase().includes(q))
-      );
-    }
-    return true;
-  });
+function renderCalendar(filter, search) {
+  if (!globalThis.calendarClient) return;
+  globalThis.calendarClient.calInitInteractions();
+  if (filter != null) {
+    document.querySelectorAll('#calFilter .cal-pb').forEach((b) => {
+      b.classList.toggle('active', b.dataset.phase === filter);
+    });
+  }
+  if (search != null && document.getElementById('calSearch')) {
+    document.getElementById('calSearch').value = search;
+  }
+  globalThis.calendarClient.calRenderCurrent();
+}
 
-  tbody.innerHTML = rows.map(wk => {
-    const isCurWk = wk.wk === (currentWeekIdx + 1);
-    const startD = getDateForDay(wk.wk-1, 0);
-    const pColorVar = PHASE_COLORS[wk.pCode] || '--accent';
-    const cells = wk.days.map((day, i) => {
-      const d = getDateForDay(wk.wk-1, i);
-      const isToday = d.getTime() === today.getTime();
-      const zc = Z_CSS[day.t] || '';
-      const zl = Z_LABEL[day.t] || 'REST';
-      return `<td style="${isToday?'background:rgba(249,115,22,0.08);':''}" class="cal-day-cell">
-        <span class="cal-pill ${zc}">${zl}</span><br>
-        <span class="cal-day-txt">${escapeHtml(displayPlanLabel(day.lbl))}</span>
-      </td>`;
-    }).join('');
-
-    return `<tr class="${isCurWk?'cur-wk':''}">
-      <td class="cal-wk">${wk.wk}</td>
-      <td><span style="font-size:10px;font-weight:700;color:var(${pColorVar})">${wk.phase}</span><br>
-        <span style="font-size:9px;color:var(--muted)">${formatDate(startD)}</span></td>
-      ${cells}
-      <td class="cal-tss">${wk.tss != null && Number.isFinite(Number(wk.tss)) ? `~${wk.tss}` : '—'}</td>
-    </tr>`;
-  }).join('');
+function openCalendarPanel() {
+  if (globalThis.calendarClient) {
+    globalThis.calendarClient.calInitInteractions();
+    globalThis.calendarClient.calOnPanelOpen();
+  } else {
+    renderCalendar();
+  }
 }
 
 // =================== RENDER NUTRITION PANEL ===================
@@ -3259,7 +3346,7 @@ function navigateToPanel(panel) {
     viewWeekIdx = currentWeekIdx;
     renderWeek();
   }
-  if (panel === 'calendar') renderCalendar();
+  if (panel === 'calendar') openCalendarPanel();
   if (panel === 'zones') renderZoneBars();
   if (panel === 'nutrition') { renderNutPanel('rest'); loadNutritionTracker(); }
   if (panel === 'plan-editor') refreshCanonicalPlan().catch(() => {});
@@ -3389,6 +3476,7 @@ document.addEventListener('visibilitychange', () => {
 
 async function initApp() {
   initPlanEditor();
+if (globalThis.calendarClient) globalThis.calendarClient.calInitInteractions();
   initPlanMessaging();
   const { loggedIn } = await initAuthPortal();
   if (loggedIn) {
@@ -3417,5 +3505,6 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+<script src="/lib/calendarClient.js"></script>
 </body>
 </html>
