@@ -283,6 +283,15 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
 .nt-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
 .nt-text{font-size:11px;color:var(--text);line-height:1.6}
 .nut-note{font-size:11px;color:var(--muted);font-style:italic;background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;line-height:1.5}
+.kcal-food-wrap{position:relative;flex:1;min-width:140px}
+.kcal-food-suggest{position:absolute;left:0;right:0;top:100%;z-index:40;margin-top:2px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.35);display:none}
+.kcal-food-suggest.open{display:block}
+.kcal-food-opt{display:block;width:100%;text-align:left;padding:8px 10px;font-size:11px;color:var(--text);background:transparent;border:none;cursor:pointer;line-height:1.35}
+.kcal-food-opt:hover,.kcal-food-opt:focus{background:var(--surface2);outline:none}
+.kcal-food-opt small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+.cal-watts-range{display:flex;gap:8px;align-items:center}
+.cal-watts-range input{flex:1}
+.cal-watts-range span{font-size:11px;color:var(--muted)}
 .supp-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:4px}
 @media(max-width:700px){.supp-grid{grid-template-columns:1fr}}
 .supp-item{background:var(--surface2);border-radius:var(--radius-sm);padding:9px 11px}
@@ -799,7 +808,7 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
         <div class="card-body" style="display:grid;gap:8px">
           <div style="font-size:12px;color:var(--muted);line-height:1.55">
             <div><b>Workflow:</b> Export/download a CSV template, edit the file offline, then import it to replace the website plan in full.</div>
-            <div><b>Expected CSV:</b> Include `plan_name`, `start_date`, `total_weeks`, `week_index`, `day_index`, `day_date`, `session_type`, `label`, `phase_label`, and `phase_code`. Per-workout projected TSS: `goal_duration_min`, optional `goal_tss` (manual), `goal_if`, `goal_wattage` in `goals_json`. Optional: `session_slot` (0,1,…) and `time_slot` (`am` / `pm`) for multiple workouts on the same day; optional `week_target_tss` (weekly goal training stress, duplicated per row is fine). Weekly goal TSS can also be set via `goals_json` with goal_type <code>goal_tss_week</code> and <code>target_value</code>.</div>
+            <div><b>Expected CSV:</b> Include `plan_name`, `start_date`, `total_weeks`, `week_index`, `day_index`, `day_date`, `session_type`, `label`, `phase_label`, and `phase_code`. Per-workout projected TSS: `goal_duration_min`, optional `goal_tss` (manual), `goal_if`, `goal_wattage` (single) or `goal_wattage_min` / `goal_wattage_max` (range; TSS uses midpoint) in `goals_json`. Optional columns `target_watts_min` and `target_watts_max` sync into those goals. Optional: `session_slot` (0,1,…) and `time_slot` (`am` / `pm`) for multiple workouts on the same day; optional `week_target_tss` (weekly goal training stress, duplicated per row is fine). Weekly goal TSS can also be set via `goals_json` with goal_type <code>goal_tss_week</code> and <code>target_value</code>.</div>
             <div><b>Phase codes (workout phases / filters):</b> Use <code>0</code> Testing, <code>1</code> SS Base, <code>2</code> Polar Build, <code>3</code> Peak Power, <code>4</code> Sprint Peak, <code>T</code> Transition, <code>F</code> Final Test. The Week view and Full Calendar “~TSS” column show <b>weekly goal</b> training stress when provided.</div>
             <div><b>Overwrite behavior:</b> Import updates canonical plan metadata and replaces all existing day/goals records with the file contents.</div>
             <div><b>Tip:</b> Start from the template CSV to preserve the expected schema.</div>
@@ -963,8 +972,14 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
           <input type="text" id="calModalLabel" maxlength="160" placeholder="e.g. Z2 endurance">
         </div>
         <div class="cal-modal-row" id="calModalWattsRow">
-          <label for="calModalWatts">Target watts (optional)</label>
-          <input type="number" id="calModalWatts" min="0" max="999" placeholder="Improves IF estimate">
+          <label>Target watts (optional)</label>
+          <input type="number" id="calModalWatts" min="0" max="999" placeholder="Single target">
+          <div class="cal-watts-range" style="margin-top:6px">
+            <input type="number" id="calModalWattsMin" min="0" max="999" placeholder="Min W">
+            <span>–</span>
+            <input type="number" id="calModalWattsMax" min="0" max="999" placeholder="Max W">
+          </div>
+          <p style="font-size:10px;color:var(--muted);margin:6px 0 0">Range uses midpoint for projected TSS.</p>
         </div>
         <div class="cal-modal-row">
           <label for="calModalDetails">Details (optional)</label>
@@ -1043,7 +1058,10 @@ body{font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:
         </div>
         <div class="kcal-body">
           <div class="kcal-add-row">
-            <input type="text" class="kcal-item-input" id="kcalItemInput" placeholder="Food item or meal…">
+            <div class="kcal-food-wrap">
+              <input type="text" class="kcal-item-input" id="kcalItemInput" placeholder="Search food or type a meal…" autocomplete="off">
+              <div class="kcal-food-suggest" id="kcalFoodSuggest" role="listbox"></div>
+            </div>
             <input type="number" class="kcal-cal-input" id="kcalCalInput" placeholder="kcal" min="0" max="9999">
             <input type="number" class="kcal-macro-input" id="kcalCarbsInput" placeholder="C g" min="0" max="9999">
             <input type="number" class="kcal-macro-input" id="kcalProteinInput" placeholder="P g" min="0" max="9999">
@@ -2953,11 +2971,110 @@ function renderCalorieOverviewCard(eaten, goal, burnt, macros) {
     ${rows.length ? `<div class="kcal-ov-rows">${rows.join('')}</div>` : ''}`;
 }
 
+let kcalFoodSearchTimer = null;
+
+function kcalHideFoodSuggest() {
+  const el = document.getElementById('kcalFoodSuggest');
+  if (el) {
+    el.classList.remove('open');
+    el.innerHTML = '';
+  }
+}
+
+function kcalApplyFoodSelection(food) {
+  if (!food) return;
+  document.getElementById('kcalItemInput').value = food.description || '';
+  if (food.calories != null) document.getElementById('kcalCalInput').value = food.calories;
+  if (food.carbs != null) document.getElementById('kcalCarbsInput').value = food.carbs;
+  if (food.protein != null) document.getElementById('kcalProteinInput').value = food.protein;
+  if (food.fat != null) document.getElementById('kcalFatInput').value = food.fat;
+  kcalHideFoodSuggest();
+}
+
+async function kcalSearchFoods(query) {
+  const session = await kcalGetSession();
+  if (!session) return [];
+  const resp = await fetch(`/api/food-search?q=${encodeURIComponent(query)}`, {
+    headers: { Authorization: `Bearer ${session.access_token}` }
+  });
+  if (!resp.ok) {
+    const d = await resp.json().catch(() => ({}));
+    throw new Error(d.error || 'Food search failed.');
+  }
+  const data = await resp.json();
+  return Array.isArray(data.foods) ? data.foods : [];
+}
+
+function kcalRenderFoodSuggest(foods) {
+  const el = document.getElementById('kcalFoodSuggest');
+  if (!el) return;
+  if (!foods.length) {
+    el.innerHTML = '<div style="padding:8px 10px;font-size:11px;color:var(--muted)">No matches</div>';
+    el.classList.add('open');
+    return;
+  }
+  el.innerHTML = foods
+    .map((f, i) => {
+      const macros = [
+        f.calories != null ? `${f.calories} kcal` : null,
+        f.carbs != null ? `C ${f.carbs}g` : null,
+        f.protein != null ? `P ${f.protein}g` : null,
+        f.fat != null ? `F ${f.fat}g` : null
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      return `<button type="button" class="kcal-food-opt" data-food-idx="${i}">${escapeHtml(f.description)}<small>${escapeHtml(macros || 'per 100g (USDA)')}</small></button>`;
+    })
+    .join('');
+  el._foods = foods;
+  el.classList.add('open');
+}
+
+function initKcalFoodSearch() {
+  const input = document.getElementById('kcalItemInput');
+  const suggest = document.getElementById('kcalFoodSuggest');
+  if (!input || !suggest) return;
+
+  input.addEventListener('input', () => {
+    clearTimeout(kcalFoodSearchTimer);
+    const q = input.value.trim();
+    if (q.length < 2) {
+      kcalHideFoodSuggest();
+      return;
+    }
+    kcalFoodSearchTimer = setTimeout(async () => {
+      try {
+        const foods = await kcalSearchFoods(q);
+        kcalRenderFoodSuggest(foods);
+      } catch (e) {
+        kcalHideFoodSuggest();
+        const errEl = document.getElementById('kcalErr');
+        if (errEl) {
+          errEl.textContent = e.message;
+          errEl.style.display = '';
+        }
+      }
+    }, 350);
+  });
+
+  suggest.addEventListener('click', (e) => {
+    const btn = e.target.closest('.kcal-food-opt');
+    if (!btn || !suggest._foods) return;
+    const idx = Number(btn.getAttribute('data-food-idx'));
+    kcalApplyFoodSelection(suggest._foods[idx]);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.kcal-food-wrap')) kcalHideFoodSuggest();
+  });
+}
+
 // Wire up tracker events (called once DOM is ready)
 function initCalorieTracker() {
   const dateInput = document.getElementById('kcalDateInput');
   dateInput.value = kcalCurrentDate;
   dateInput.addEventListener('change', () => loadNutritionTracker(dateInput.value));
+  initKcalFoodSearch();
 
   document.getElementById('kcalAddBtn').addEventListener('click', async () => {
     const item = document.getElementById('kcalItemInput').value.trim();

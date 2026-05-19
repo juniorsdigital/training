@@ -13,13 +13,11 @@
   - `max_power`
   - `source`
 
-## 2) Seed initial legacy plan (one-time)
+## 2) Load initial plan via CSV
 
 - Sign in to the app as the allowed account.
 - Open **Plan Editor**.
-- If no plans exist, call `POST /api/training-plan-seed-legacy` with:
-  - `start_date` (default `2026-05-04`)
-  - `weeks` (legacy `WEEKS` array payload)
+- If no plans exist, use **Download Template CSV**, fill in plan rows, and **Import and Overwrite Plan** (or import an exported canonical CSV).
 
 ### 2b) CSV template + CSV import/export
 
@@ -29,7 +27,12 @@
 - **Import via API:** `POST /api/training-plan-import` with `Content-Type: text/csv` and `Authorization: Bearer <access_token>`.
 - **Verify:** reload the app, confirm **Plan Editor** shows the plan and **Today / Week / Full Calendar** reflect the imported CSV.
 
-## 3) Configure workout providers
+## 3) Configure nutrition food search (optional)
+
+- Set `USDA_FDC_API_KEY` in Vercel env (free key from [FoodData Central](https://fdc.nal.usda.gov/api-key-signup.html)).
+- The Nutrition panel uses `GET /api/food-search?q=…` to autocomplete foods; logging still uses `/api/nutrition`.
+
+## 4) Configure workout providers
 
 - Garmin primary provider:
   - `GARMIN_CONNECT_BASE_URL`
@@ -41,7 +44,7 @@
 
 If Garmin is unavailable/unconfigured, sync falls back to Intervals automatically.
 
-## 4) Validate the full flow
+## 5) Validate the full flow
 
 - Plan management:
   - open **Plan Editor** and confirm canonical plan loads
@@ -56,7 +59,7 @@ If Garmin is unavailable/unconfigured, sync falls back to Intervals automaticall
   - verify response source (`garmin` or `intervals`)
   - verify power columns persisted in `intervals_activity_snapshots`
 
-## 5) Backward compatibility checks
+## 6) Backward compatibility checks
 
 - If plan APIs fail, app still uses built-in legacy `WEEKS`.
 - Existing nutrition logging endpoints and dashboard loading remain unchanged.
