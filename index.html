@@ -2553,7 +2553,17 @@ function renderToday() {
     const wColor = getZoneColor(day.t);
     wHTML += `<div><div class="workout-watts" style="color:${wColor}">${day.w}</div><div class="workout-watts-lbl">Target Power</div></div>`;
   }
-  if (day.am) {
+  const todaySessions = activePlan?.id ? planSessionsForDate(today) : [];
+  if (todaySessions.length) {
+    todaySessions.forEach((row) => {
+      const st = String(row.session_type || 'rest').toLowerCase();
+      const bc = st === 'rest' ? 'var(--rst)' : getZoneColor(st);
+      const zl = Z_LABEL[st] || st.toUpperCase();
+      const lbl = escapeHtml(displayPlanLabel(row.label) || zl);
+      const timeLbl = planSessionSlotLabel(row);
+      wHTML += `<div class="session-block" style="border-color:${bc}"><div class="sess-time">${escapeHtml(timeLbl)}</div><div class="sess-desc">${lbl}</div></div>`;
+    });
+  } else if (day.am) {
     const bc = day.t === 'rest' ? 'var(--rst)' : getZoneColor(day.t);
     wHTML += `<div class="session-block" style="border-color:${bc}"><div class="sess-time">Morning Session</div><div class="sess-desc">${day.am}</div></div>`;
     if (day.pm && day.pm !== '—') {
@@ -2620,6 +2630,43 @@ function projectedTssLineForDate(d) {
     : '';
 }
 
+function planSessionsForDate(d) {
+  if (!activePlan?.days) return [];
+  const iso = getLocalISODate(d);
+  return activePlan.days
+    .filter((row) => String(row.day_date).slice(0, 10) === iso)
+    .filter((row) => String(row.session_type || 'rest').toLowerCase() !== 'rest')
+    .sort((a, b) => (Number(a.session_slot) || 0) - (Number(b.session_slot) || 0));
+}
+
+function planSessionSlotLabel(row) {
+  const ts = String(row.time_slot || '').trim().toLowerCase();
+  if (ts === 'am') return 'AM';
+  if (ts === 'pm') return 'PM';
+  const slot = Number(row.session_slot) || 0;
+  if (slot === 0) return 'Session 1';
+  if (slot === 1) return 'Session 2';
+  return `Session ${slot + 1}`;
+}
+
+function planSessionLinesHtml(d, maxVisible) {
+  const max = maxVisible == null ? 3 : maxVisible;
+  const sessions = planSessionsForDate(d);
+  if (!sessions.length) return '';
+  let html = '';
+  sessions.slice(0, max).forEach((row) => {
+    const st = String(row.session_type || '').toLowerCase();
+    const zl = Z_LABEL[st] || st.toUpperCase();
+    const lbl = escapeHtml(displayPlanLabel(row.label) || zl);
+    html += `<div class="day-det">${escapeHtml(planSessionSlotLabel(row))}: ${lbl}</div>`;
+  });
+  const extra = sessions.length - max;
+  if (extra > 0) {
+    html += `<div class="day-det" style="font-style:italic">+${extra} more — see calendar</div>`;
+  }
+  return html;
+}
+
 // =================== RENDER WEEK ===================
 function renderWeek() {
   const weeks = getWeeksData();
@@ -2653,8 +2700,14 @@ function renderWeek() {
         <div class="day-tag ${zc}">${zl}</div>
         <div class="day-title-txt">${escapeHtml(displayPlanLabel(day.lbl))}</div>
         ${day.w ? `<div class="day-watts-txt" style="color:${zColor}">${day.w}</div>` : ''}
-        ${day.am ? `<div class="day-det">AM: ${day.am}</div>` : ''}
-        ${day.pm && day.pm !== '—' ? `<div class="day-det">PM: ${day.pm}</div>` : ''}
+        ${
+          activePlan?.id
+            ? planSessionLinesHtml(d) ||
+              (day.am ? `<div class="day-det">${day.am}</div>` : '') +
+                (day.pm && day.pm !== '—' ? `<div class="day-det">${day.pm}</div>` : '')
+            : (day.am ? `<div class="day-det">${day.am}</div>` : '') +
+              (day.pm && day.pm !== '—' ? `<div class="day-det">${day.pm}</div>` : '')
+        }
         ${projectedTssLineForDate(d)}
       </div>
     </div>`;

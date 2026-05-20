@@ -57,7 +57,11 @@ module.exports = async function handler(req, res) {
         if (!Number.isInteger(toDayIndex) || toDayIndex < 0 || toDayIndex > 6) {
           return res.status(400).json({ error: 'to_day_index must be 0..6.' });
         }
-        const result = await movePlanSession(planId, fromDayId, toWeekIndex, toDayIndex, { ftp });
+        const toDayDate = String(body.to_day_date || '').trim();
+        const result = await movePlanSession(planId, fromDayId, toWeekIndex, toDayIndex, {
+          ftp,
+          toDayDate: toDayDate || undefined
+        });
         return res.status(200).json({ ok: true, ...result });
       }
 

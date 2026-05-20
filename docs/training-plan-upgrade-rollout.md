@@ -1,12 +1,11 @@
 # Training Plan Upgrade Rollout
 
-## 1) Apply database migration
+## 1) Apply database migrations
 
-- Run the SQL migration: `supabase/migrations/20260505_training_plan_editor.sql`.
-- This creates:
-  - `training_plans`
-  - `training_plan_days`
-  - `training_plan_day_goals`
+- Run **both** SQL migrations in order:
+  1. `supabase/migrations/20260505_training_plan_editor.sql` — creates `training_plans`, `training_plan_days`, `training_plan_day_goals`
+  2. `supabase/migrations/20260510_training_plan_session_slots.sql` — adds `session_slot`, `time_slot`, `week_target_tss`, and unique `(plan_id, week_index, day_index, session_slot)` (required for calendar drag-and-drop and multiple workouts per day)
+- Without the second migration, calendar moves and second workouts on the same day will fail or appear not to save.
 - This also extends `intervals_activity_snapshots` with:
   - `avg_power`
   - `normalized_power`
